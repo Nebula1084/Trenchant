@@ -2,178 +2,370 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Trenchant</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				font-family: Monospace;
-				background-color: #000;
-				color: #fff;
-				margin: 0px;
-				overflow: hidden;
+		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+		
+		<script type="text/javascript" src="js/Trenchant.js"></script>
+        <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>
+		<script type="text/javascript" src="js/libs/glMatrix-0.9.5.min.js"></script>
+		<script type="text/javascript" src="js/libs/webgl-utils.js"></script>
+		<script type="text/javascript" src="js/libs/jquery.min.js"></script>
+		
+		<script id="per-fragment-lighting-fs" type="x-shader/x-fragment">
+			precision mediump float;
+		
+			varying vec2 vTextureCoord;
+			varying vec3 vTransformedNormal;
+			varying vec4 vPosition;
+		
+			uniform float uMaterialShininess;
+		
+			uniform bool uShowSpecularHighlights;
+			uniform bool uUseLighting;
+			uniform bool uUseTextures;
+		
+			uniform vec3 uAmbientColor;
+		
+			uniform vec3 uPointLightingLocation;
+			uniform vec3 uPointLightingSpecularColor;
+			uniform vec3 uPointLightingDiffuseColor;
+		
+			uniform sampler2D uSampler;
+		
+		
+			void main(void) {
+				vec3 lightWeighting;
+				if (!uUseLighting) {
+					lightWeighting = vec3(1.0, 1.0, 1.0);
+				} else {
+					vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+					vec3 normal = normalize(vTransformedNormal);
+		
+					float specularLightWeighting = 0.0;
+					if (uShowSpecularHighlights) {
+						vec3 eyeDirection = normalize(-vPosition.xyz);
+						vec3 reflectionDirection = reflect(-lightDirection, normal);
+		
+						specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+					}
+		
+					float diffuseLightWeighting = max(dot(normal, lightDirection), 0.0);
+					lightWeighting = uAmbientColor
+						+ uPointLightingSpecularColor * specularLightWeighting
+						+ uPointLightingDiffuseColor * diffuseLightWeighting;
+				}
+		
+				vec4 fragmentColor;
+				if (uUseTextures) {
+					fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+				} else {
+					fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
+				}
+				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
 			}
-			#info {
-				color: #fff;
-				position: absolute;
-				top: 10px;
-				width: 100%;
-				text-align: center;
-				z-index: 100;
-				display:block;
+		</script>
+		
+		<script id="per-fragment-lighting-vs" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+			attribute vec3 aVertexNormal;
+			attribute vec2 aTextureCoord;
+		
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+			uniform mat3 uNMatrix;
+		
+			varying vec2 vTextureCoord;
+			varying vec3 vTransformedNormal;
+			varying vec4 vPosition;
+		
+		
+			void main(void) {
+				vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+				gl_Position = uPMatrix * vPosition;
+				vTextureCoord = aTextureCoord;
+				vTransformedNormal = uNMatrix * aVertexNormal;
 			}
-			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
-		</style>
+		</script>
+		
+		
+	<script type="text/javascript">
+	
+		var gl;
+	
+		function initGL(canvas) {
+			try {
+				gl = canvas.getContext("experimental-webgl");
+				gl.viewportWidth = canvas.width;
+				gl.viewportHeight = canvas.height;
+			} catch (e) {
+			}
+			if (!gl) {
+				alert("Could not initialise WebGL, sorry :-(");
+			}
+		}
+	
+	
+		function getShader(gl, id) {
+			var shaderScript = document.getElementById(id);
+			if (!shaderScript) {
+				return null;
+			}
+	
+			var str = "";
+			var k = shaderScript.firstChild;
+			while (k) {
+				if (k.nodeType == 3) {
+					str += k.textContent;
+				}
+				k = k.nextSibling;
+			}
+	
+			var shader;
+			if (shaderScript.type == "x-shader/x-fragment") {
+				shader = gl.createShader(gl.FRAGMENT_SHADER);
+			} else if (shaderScript.type == "x-shader/x-vertex") {
+				shader = gl.createShader(gl.VERTEX_SHADER);
+			} else {
+				return null;
+			}
+	
+			gl.shaderSource(shader, str);
+			gl.compileShader(shader);
+	
+			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+				alert(gl.getShaderInfoLog(shader));
+				return null;
+			}
+	
+			return shader;
+		}
+	
+		var shaderProgram;
+		
+
+    function initShaders() {
+        var fragmentShader = getShader(gl, "per-fragment-lighting-fs");
+        var vertexShader = getShader(gl, "per-fragment-lighting-vs");
+
+        shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertexShader);
+        gl.attachShader(shaderProgram, fragmentShader);
+        gl.linkProgram(shaderProgram);
+
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            alert("Could not initialise shaders");
+        }
+
+        gl.useProgram(shaderProgram);
+
+        shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+        shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
+        gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
+
+        shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
+
+        shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+        shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+        shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
+        shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+        shaderProgram.materialShininessUniform = gl.getUniformLocation(shaderProgram, "uMaterialShininess");
+        shaderProgram.showSpecularHighlightsUniform = gl.getUniformLocation(shaderProgram, "uShowSpecularHighlights");
+        shaderProgram.useTexturesUniform = gl.getUniformLocation(shaderProgram, "uUseTextures");
+        shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
+        shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
+        shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
+        shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingSpecularColor");
+        shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingDiffuseColor");
+    }
+
+
+    function handleLoadedTexture(texture) {
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_2D);
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
+    }
+
+    var earthTexture;
+    var galvanizedTexture;
+
+    function initTextures() {
+        earthTexture = gl.createTexture();
+        earthTexture.image = new Image();
+        earthTexture.image.onload = function () {
+            handleLoadedTexture(earthTexture)
+        }
+        earthTexture.image.src = "textures/earth.jpg";
+
+        galvanizedTexture = gl.createTexture();
+        galvanizedTexture.image = new Image();
+        galvanizedTexture.image.onload = function () {
+            handleLoadedTexture(galvanizedTexture)
+        }
+        galvanizedTexture.image.src = "textures/arroway.de_metal+structure+06_d100_flat.jpg";
+    }
+
+
+    var mvMatrix = mat4.create();
+    var mvMatrixStack = [];
+    var pMatrix = mat4.create();
+    var object3d;
+
+    function mvPushMatrix() {
+        var copy = mat4.create();
+        mat4.set(mvMatrix, copy);
+        mvMatrixStack.push(copy);
+    }
+
+    function mvPopMatrix() {
+        if (mvMatrixStack.length == 0) {
+            throw "Invalid popMatrix!";
+        }
+        mvMatrix = mvMatrixStack.pop();
+    }
+
+    function setMatrixUniforms() {
+        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+        gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+
+        var normalMatrix = mat3.create();
+        mat4.toInverseMat3(mvMatrix, normalMatrix);
+        mat3.transpose(normalMatrix);
+        gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
+    }
+
+    function degToRad(degrees) {
+        return degrees * Math.PI / 180;
+    }	
+	
+    var teapotAngle = 180;
+
+
+    function drawScene() {        
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        if (object3d == null) {
+            return;
+        }
+
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+
+        var specularHighlights = true;
+        gl.uniform1i(shaderProgram.showSpecularHighlightsUniform, specularHighlights);
+
+        var lighting = true;
+        gl.uniform1i(shaderProgram.useLightingUniform, lighting);
+        if (lighting) {
+            gl.uniform3f(
+                shaderProgram.ambientColorUniform,
+                0.2,
+                0.2,
+                0.2
+            );
+
+            gl.uniform3f(
+                shaderProgram.pointLightingLocationUniform,
+                -10.0,
+                4.0,
+                -20.0
+            );
+
+            gl.uniform3f(
+                shaderProgram.pointLightingSpecularColorUniform,
+                0.8,
+                0.8,
+                0.8
+            );
+
+            gl.uniform3f(
+                shaderProgram.pointLightingDiffuseColorUniform,
+                0.8,
+                0.8,
+                0.8
+            );
+        }
+
+        var texture = "earth";
+        gl.uniform1i(shaderProgram.useTexturesUniform, texture != "none");
+
+        mat4.identity(mvMatrix);
+
+        mat4.translate(mvMatrix, [0, 0, -800]);
+        mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
+        mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+
+        gl.activeTexture(gl.TEXTURE0);
+        if (texture == "earth") {
+            gl.bindTexture(gl.TEXTURE_2D, earthTexture);
+        } else if (texture == "galvanized") {
+            gl.bindTexture(gl.TEXTURE_2D, galvanizedTexture);
+        }
+        gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+        gl.uniform1f(shaderProgram.materialShininessUniform, 32.0);
+        
+        setMatrixUniforms();
+        object3d.draw();           
+    }
+
+
+    var lastTime = 0;
+
+    function animate() {
+        var timeNow = new Date().getTime();
+        if (lastTime != 0) {
+            var elapsed = timeNow - lastTime;
+
+            teapotAngle += 0.05 * elapsed;
+        }
+        lastTime = timeNow;
+    }
+
+
+    function tick() {
+        requestAnimFrame(tick);
+        drawScene();
+        animate();        
+    }
+
+	function loadObj() {
+		loader = new Trenchant.OBJLoader();
+		loader.load("obj/car.obj", function(objects){
+			object3d=new Trenchant.Object3D(objects);
+            for (var key in object3d.obj_dict){
+               object3d.obj_dict[key].shaderProgram=shaderProgram;
+               console.log("part: "+key);
+            }
+		});        
+	}
+
+    function webGLStart() {
+        var canvas = document.getElementById("trenchant_canvas");      
+        initGL(canvas);
+        initShaders();
+        initTextures();
+        loadObj();
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+        
+        tick();
+    }
+	
+	</script>
 	</head>
 	
-	<body>		
+	<body onload="webGLStart();">
+		
+		<canvas id="trenchant_canvas" style="border: none;" width="1400" height="700"></canvas>
 
-		<script src="js/three.js"></script>
-		<script src="js/loaders/OBJLoader.js"></script>
-
-		<script>
-
-			var container;
-
-			var camera, scene, renderer;
-
-			var mouseX = 0, mouseY = 0;
-
-			var windowHalfX = window.innerWidth / 2;
-			var windowHalfY = window.innerHeight / 2;
-
-
-			init();
-			animate();
-
-
-			function init() {
-
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
-
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-				camera.position.z = -500;
-
-				// scene
-
-				scene = new THREE.Scene();
-
-				var ambient = new THREE.AmbientLight( 0x101030 );
-				scene.add( ambient );
-
-				var directionalLight = new THREE.DirectionalLight( 0xffffff );
-				directionalLight.position.set( 0, 0, -100 );
-				scene.add( directionalLight );
-
-				// texture
-				console.log("begin loading...");
-
-				var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
-
-					console.log( item, loaded, total );
-
-				};
-
-				var texture = new THREE.Texture();
-
-				var onProgress = function ( xhr ) {
-					if ( xhr.lengthComputable ) {
-						var percentComplete = xhr.loaded / xhr.total * 100;
-						console.log( Math.round(percentComplete, 2) + '% downloaded' );
-					}
-				};
-
-				var onError = function ( xhr ) {
-				};
-
-
-				var loader = new THREE.ImageLoader( manager );
-				loader.load( 'textures/UV_Grid_Sm.jpg', function ( image ) {
-
-					texture.image = image;
-					texture.needsUpdate = true;
-
-				} );
-
-				// model
-
-				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'obj/Maserati - GT.obj', function ( object ) {
-
-					object.traverse( function ( child ) {
-
-						if ( child instanceof THREE.Mesh ) {
-
-							// child.material.map = texture;
-							child.material.color = new THREE.Color(0xffffff);
-							console.log(child.material);
-						}
-
-					} );
-
-					object.position.y = - 80;
-					scene.add( object );
-
-				}, onProgress, onError );
-
-				//
-
-				renderer = new THREE.WebGLRenderer();
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.setClearColor(new THREE.Color(0xffffff));
-				container.appendChild( renderer.domElement );
-
-				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-
-				//
-
-				window.addEventListener( 'resize', onWindowResize, false );
-
-			}
-
-			function onWindowResize() {
-
-				windowHalfX = window.innerWidth / 2;
-				windowHalfY = window.innerHeight / 2;
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			function onDocumentMouseMove( event ) {
-
-				mouseX = ( event.clientX - windowHalfX );
-				mouseY = ( event.clientY - windowHalfY );
-
-			}
-
-			//
-
-			function animate() {
-
-				requestAnimationFrame( animate );
-				render();
-
-			}
-
-			function render() {
-
-				camera.position.x += ( mouseX - camera.position.x ) * .05;
-				camera.position.y += ( - mouseY - camera.position.y ) * .05;
-
-				camera.lookAt( scene.position );
-
-				renderer.render( scene, camera );
-
-			}
-
-		</script>
 	</body>
 
 </html>

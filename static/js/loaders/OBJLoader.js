@@ -1,39 +1,26 @@
-/**
- * @author mrdoob / http://mrdoob.com/
- */
-
-THREE.OBJLoader = function ( manager ) {
-
-	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
+/* global Trenchant */
+Trenchant.OBJLoader = function () {
 
 };
 
-THREE.OBJLoader.prototype = {
+Trenchant.OBJLoader.prototype = {
 
-	constructor: THREE.OBJLoader,
+	constructor: Trenchant.OBJLoader,
 
 
-	load: function ( url, onLoad, onProgress, onError ) {
-
+	load: function ( url, onLoad) {
+		var request = new XMLHttpRequest();
 		var scope = this;
-
-		var loader = new THREE.XHRLoader( scope.manager );
-		loader.setCrossOrigin( this.crossOrigin );
-		loader.load( url, function ( text ) {
-
-			onLoad( scope.parse( text ) );
-
-		}, onProgress, onError );
-
+        request.open("GET", url);
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {
+				onLoad(scope.parse(request.responseText));
+            }
+        }
+        request.send();
 	},
 
-	setCrossOrigin: function ( value ) {
-
-		this.crossOrigin = value;
-
-	},
-
-	parse: function ( text ) {
+    parse: function ( text ) {
 
 		console.time( 'OBJLoader' );
 
@@ -297,33 +284,32 @@ THREE.OBJLoader.prototype = {
 
 			} else if ( /^o /.test( line ) ) {
 
+
+
+			} else if ( /^g /.test( line ) ) {			
+				var part = line.substring( 2 ).trim();
+				if (part=="default")
+					continue;				
 				geometry = {
 					vertices: [],
 					normals: [],
 					uvs: []
 				};
-
+	
 				material = {
 					name: ''
 				};
-
+	
 				object = {
-					name: line.substring( 2 ).trim(),
+					name: part,
 					geometry: geometry,
 					material: material
 				};
-
-				objects.push( object )
-
-			} else if ( /^g /.test( line ) ) {
-
-				// group
-
+	
+				objects.push( object );
 			} else if ( /^usemtl /.test( line ) ) {
 
 				// material
-
-				material.name = line.substring( 7 ).trim();
 
 			} else if ( /^mtllib /.test( line ) ) {
 
@@ -340,44 +326,6 @@ THREE.OBJLoader.prototype = {
 			}
 
 		}
-
-		var container = new THREE.Object3D();
-
-		for ( var i = 0, l = objects.length; i < l; i ++ ) {
-
-			object = objects[ i ];
-			geometry = object.geometry;
-
-			var buffergeometry = new THREE.BufferGeometry();
-
-			buffergeometry.addAttribute( 'position', new THREE.BufferAttribute( new Float32Array( geometry.vertices ), 3 ) );
-
-			if ( geometry.normals.length > 0 ) {
-
-				buffergeometry.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( geometry.normals ), 3 ) );
-
-			}
-
-			if ( geometry.uvs.length > 0 ) {
-
-				buffergeometry.addAttribute( 'uv', new THREE.BufferAttribute( new Float32Array( geometry.uvs ), 2 ) );
-
-			}
-
-			material = new THREE.MeshLambertMaterial();
-			material.name = object.material.name;
-
-			var mesh = new THREE.Mesh( buffergeometry, material );
-			mesh.name = object.name;
-
-			container.add( mesh );
-
-		}
-
-		console.timeEnd( 'OBJLoader' );
-
-		return container;
-
-	}
-
+        return  objects;
+    }
 };
