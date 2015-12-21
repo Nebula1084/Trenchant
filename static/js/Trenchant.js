@@ -370,6 +370,31 @@ Trenchant.Object = function(object){
 Trenchant.Object.prototype = {
 	constructor: Trenchant.Object,
 	draw: function(){
+        
+        gl.useProgram(this.shaderProgram);
+
+        this.shaderProgram.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);
+
+        this.shaderProgram.vertexNormalAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
+        gl.enableVertexAttribArray(this.shaderProgram.vertexNormalAttribute);
+
+        this.shaderProgram.textureCoordAttribute = gl.getAttribLocation(this.shaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(this.shaderProgram.textureCoordAttribute);
+
+        this.shaderProgram.pMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uPMatrix");
+        this.shaderProgram.mvMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
+        this.shaderProgram.nMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uNMatrix");
+        this.shaderProgram.samplerUniform = gl.getUniformLocation(this.shaderProgram, "uSampler");
+        this.shaderProgram.materialShininessUniform = gl.getUniformLocation(this.shaderProgram, "uMaterialShininess");
+        this.shaderProgram.showSpecularHighlightsUniform = gl.getUniformLocation(this.shaderProgram, "uShowSpecularHighlights");
+        this.shaderProgram.useTexturesUniform = gl.getUniformLocation(this.shaderProgram, "uUseTextures");
+        this.shaderProgram.useLightingUniform = gl.getUniformLocation(this.shaderProgram, "uUseLighting");
+        this.shaderProgram.ambientColorUniform = gl.getUniformLocation(this.shaderProgram, "uAmbientColor");
+        this.shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingLocation");
+        this.shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingSpecularColor");
+        this.shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingDiffuseColor");
+               
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
         gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
@@ -402,8 +427,7 @@ Trenchant.Object3D.prototype = {
 };
 
 Trenchant.Part = function(geometry){
-	this.vertexNormalBuffer = gl.createBuffer();
-	var test = new Float32Array(geometry.normals)
+	this.vertexNormalBuffer = gl.createBuffer();	
 	gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry.normals), gl.STATIC_DRAW);
 	this.vertexNormalBuffer.itemSize = 3;
@@ -465,7 +489,7 @@ Trenchant.Geometry.prototype = {
 
 }
 
-Trenchant.ParametricGeometry = function ( func, slices, stacks ) {
+Trenchant.ParametricGeometry = function ( func, slices, stacks, hole ) {
 
 	Trenchant.Geometry.call( this );
 
@@ -519,6 +543,11 @@ Trenchant.ParametricGeometry = function ( func, slices, stacks ) {
 			b = i * sliceCount + j + 1;
 			c = ( i + 1 ) * sliceCount + j + 1;
 			d = ( i + 1 ) * sliceCount + j;
+			
+			if (hole != undefined)
+				if (hole(verts[a]) || hole(verts[b]) || hole[c] || hole[d])
+					continue;
+			
 			ab.subVectors(verts[a], verts[b]);
 			cb.subVectors(verts[c], verts[b]);
 			ad.subVectors(verts[a], verts[d]);
