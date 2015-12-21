@@ -394,7 +394,7 @@ Trenchant.Object.prototype = {
         this.shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingLocation");
         this.shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingSpecularColor");
         this.shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingDiffuseColor");
-               
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
         gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
