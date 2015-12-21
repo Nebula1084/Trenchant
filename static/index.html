@@ -5,87 +5,12 @@
 		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 		
 		<script type="text/javascript" src="js/Trenchant.js"></script>
+        <script type="text/javascript" src="js/shader/PhongShader.js"></script>
+        <script type="text/javascript" src="js/shader/VertexShader.js"></script>
         <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>
 		<script type="text/javascript" src="js/libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="js/libs/webgl-utils.js"></script>
-		<script type="text/javascript" src="js/libs/jquery.min.js"></script>
-		
-		<script id="per-fragment-lighting-fs" type="x-shader/x-fragment">
-			precision mediump float;
-		
-			varying vec2 vTextureCoord;
-			varying vec3 vTransformedNormal;
-			varying vec4 vPosition;
-		
-			uniform float uMaterialShininess;
-		
-			uniform bool uShowSpecularHighlights;
-			uniform bool uUseLighting;
-			uniform bool uUseTextures;
-		
-			uniform vec3 uAmbientColor;
-		
-			uniform vec3 uPointLightingLocation;
-			uniform vec3 uPointLightingSpecularColor;
-			uniform vec3 uPointLightingDiffuseColor;
-		
-			uniform sampler2D uSampler;
-		
-		
-			void main(void) {
-				vec3 lightWeighting;
-				if (!uUseLighting) {
-					lightWeighting = vec3(1.0, 1.0, 1.0);
-				} else {
-					vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
-					vec3 normal = normalize(vTransformedNormal);
-		
-					float specularLightWeighting = 0.0;
-					if (uShowSpecularHighlights) {
-						vec3 eyeDirection = normalize(-vPosition.xyz);
-						vec3 reflectionDirection = reflect(-lightDirection, normal);
-		
-						specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
-					}
-		
-					float diffuseLightWeighting = max(dot(normal, lightDirection), 0.0);
-					lightWeighting = uAmbientColor
-						+ uPointLightingSpecularColor * specularLightWeighting
-						+ uPointLightingDiffuseColor * diffuseLightWeighting;
-				}
-		
-				vec4 fragmentColor;
-				if (uUseTextures) {
-					fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-				} else {
-					fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
-				}
-				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
-			}
-		</script>
-		
-		<script id="per-fragment-lighting-vs" type="x-shader/x-vertex">
-			attribute vec3 aVertexPosition;
-			attribute vec3 aVertexNormal;
-			attribute vec2 aTextureCoord;
-		
-			uniform mat4 uMVMatrix;
-			uniform mat4 uPMatrix;
-			uniform mat3 uNMatrix;
-		
-			varying vec2 vTextureCoord;
-			varying vec3 vTransformedNormal;
-			varying vec4 vPosition;
-		
-		
-			void main(void) {
-				vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
-				gl_Position = uPMatrix * vPosition;
-				vTextureCoord = aTextureCoord;
-				vTransformedNormal = uNMatrix * aVertexNormal;
-			}
-		</script>
-		
+		<script type="text/javascript" src="js/libs/jquery.min.js"></script>		
 		
 	<script type="text/javascript">
 	
@@ -101,50 +26,13 @@
 			if (!gl) {
 				alert("Could not initialise WebGL, sorry :-(");
 			}
-		}
-	
-	
-		function getShader(gl, id) {
-			var shaderScript = document.getElementById(id);
-			if (!shaderScript) {
-				return null;
-			}
-	
-			var str = "";
-			var k = shaderScript.firstChild;
-			while (k) {
-				if (k.nodeType == 3) {
-					str += k.textContent;
-				}
-				k = k.nextSibling;
-			}
-	
-			var shader;
-			if (shaderScript.type == "x-shader/x-fragment") {
-				shader = gl.createShader(gl.FRAGMENT_SHADER);
-			} else if (shaderScript.type == "x-shader/x-vertex") {
-				shader = gl.createShader(gl.VERTEX_SHADER);
-			} else {
-				return null;
-			}
-	
-			gl.shaderSource(shader, str);
-			gl.compileShader(shader);
-	
-			if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-				alert(gl.getShaderInfoLog(shader));
-				return null;
-			}
-	
-			return shader;
-		}
-        	
+		}        	
 		var shaderProgram;
 		
 
     function initShaders() {
-        var fragmentShader = getShader(gl, "per-fragment-lighting-fs");
-        var vertexShader = getShader(gl, "per-fragment-lighting-vs");
+        var fragmentShader = Trenchant.PhongShader(gl);
+        var vertexShader = Trenchant.VertexShader(gl);
 
         shaderProgram = gl.createProgram();
         gl.attachShader(shaderProgram, vertexShader);
@@ -269,7 +157,7 @@
             );
         }
 
-        var texture = "galvanized";
+        var texture = "none";
         gl.uniform1i(shaderProgram.useTexturesUniform, texture != "none");
 
         mat4.identity(mvMatrix);
