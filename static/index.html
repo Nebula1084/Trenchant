@@ -5,6 +5,8 @@
 		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 		
 		<script type="text/javascript" src="js/Trenchant.js"></script>
+        <script type="text/javascript" src="js/obj/Object.js"></script>
+        <script type="text/javascript" src="js/mtl/Material.js"></script>
         <script type="text/javascript" src="js/shader/PhongShader.js"></script>
         <script type="text/javascript" src="js/shader/VertexShader.js"></script>
         <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>
@@ -34,6 +36,42 @@
         var fragmentShader = Trenchant.PhongShader(gl);
         var vertexShader = Trenchant.VertexShader(gl);
 
+        M1 = new Trenchant.Material();
+
+        M1.showSpecularHighlightsUniform = true;
+        M1.useLightingUniform = true;
+        M1.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
+        M1.pointLightingLocationUniform = new Trenchant.Vector3(-10, 4.0, -20.0);
+        M1.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
+        M1.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
+        M1.useTexturesUniform = "none";
+        M1.samplerUniform  = 0;
+        M1.materialShininessUniform = 32.0;
+        
+        
+        M2 = new Trenchant.Material();
+
+        M2.showSpecularHighlightsUniform = true;
+        M2.useLightingUniform = true;
+        M2.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
+        M2.pointLightingLocationUniform = new Trenchant.Vector3(-10, 4.0, -20.0);
+        M2.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
+        M2.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.0, 0.0, 0.0);
+        M2.useTexturesUniform = "none";
+        M2.samplerUniform  = 0;
+        M2.materialShininessUniform = 32.0;
+        
+        M3 = new Trenchant.Material();
+
+        M3.showSpecularHighlightsUniform = false;
+        M3.useLightingUniform = true;
+        M3.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
+        M3.pointLightingLocationUniform = new Trenchant.Vector3(-10, 4.0, -20.0);        
+        M3.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.0, 0.0, 0.0);
+        M3.useTexturesUniform = "none";
+        M3.samplerUniform  = 0;
+        M3.materialShininessUniform = 32.0;
+
         shaderProgram = gl.createProgram();
         gl.attachShader(shaderProgram, vertexShader);
         gl.attachShader(shaderProgram, fragmentShader);
@@ -42,10 +80,11 @@
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
             alert("Could not initialise shaders");
         }
+        
+        
 
         
     }
-
 
     function handleLoadedTexture(texture) {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -76,7 +115,6 @@
         }
         galvanizedTexture.image.src = "textures/arroway.de_metal+structure+06_d100_flat.jpg";
     }
-
 
     var mvMatrix = mat4.create();
     var mvMatrixStack = [];
@@ -120,42 +158,7 @@
             return;
         }
 
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
-
-        var specularHighlights = true;
-        gl.uniform1i(shaderProgram.showSpecularHighlightsUniform, specularHighlights);
-
-        var lighting = true;
-        gl.uniform1i(shaderProgram.useLightingUniform, lighting);
-        if (lighting) {
-            gl.uniform3f(
-                shaderProgram.ambientColorUniform,
-                0.2,
-                0.2,
-                0.2
-            );
-
-            gl.uniform3f(
-                shaderProgram.pointLightingLocationUniform,
-                -10.0,
-                4.0,
-                -20.0
-            );
-
-            gl.uniform3f(
-                shaderProgram.pointLightingSpecularColorUniform,
-                0.8,
-                0.8,
-                0.8
-            );
-
-            gl.uniform3f(
-                shaderProgram.pointLightingDiffuseColorUniform,
-                0.8,
-                0.8,
-                0.8
-            );
-        }
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);        
 
         var texture = "none";
         gl.uniform1i(shaderProgram.useTexturesUniform, texture != "none");
@@ -165,21 +168,10 @@
         mat4.translate(mvMatrix, [0, 0, -800]);
         mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
         mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
-
-        gl.activeTexture(gl.TEXTURE0);
-        if (texture == "earth") {
-            gl.bindTexture(gl.TEXTURE_2D, earthTexture);
-        } else if (texture == "galvanized") {
-            gl.bindTexture(gl.TEXTURE_2D, galvanizedTexture);
-        }
-        gl.uniform1i(shaderProgram.samplerUniform, 0);
-
-        gl.uniform1f(shaderProgram.materialShininessUniform, 32.0);
         
         setMatrixUniforms();
         object3d.draw();           
     }
-
 
     var lastTime = 0;
 
@@ -206,8 +198,16 @@
 			object3d=new Trenchant.Object3D(objects);
             for (var key in object3d.obj_dict){
                object3d.obj_dict[key].shaderProgram=shaderProgram;
+               object3d.obj_dict[key].material = M1;
                console.log("part: "+key);
             }
+            object3d.obj_dict["HDM_04_10_carpaint"].material = M2;
+            
+            object3d.obj_dict["HDM_04_10_tire_fl"].material = M3;
+            object3d.obj_dict["HDM_04_10_tire_fr"].material = M3;
+            object3d.obj_dict["HDM_04_10_tire_rr"].material = M3;
+            object3d.obj_dict["HDM_04_10_tire_rl"].material = M3;
+            
 		});        
 	}
 
