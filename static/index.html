@@ -8,6 +8,8 @@
         <script type="text/javascript" src="js/obj/Object.js"></script>
         <script type="text/javascript" src="js/mtl/Material.js"></script>
         <script type="text/javascript" src="js/shader/PhongShader.js"></script>
+        <script type="text/javascript" src="js/shader/Cook_Torrance.js"></script>
+        <script type="text/javascript" src="js/shader/Torrance_Sparrow.js"></script>
         <script type="text/javascript" src="js/shader/VertexShader.js"></script>
         <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>
 		<script type="text/javascript" src="js/libs/glMatrix-0.9.5.min.js"></script>
@@ -33,7 +35,8 @@
 		
 
     function initShaders() {
-        var fragmentShader = Trenchant.PhongShader(gl);
+        // var fragmentShader = Trenchant.PhongShader(gl);
+        var fragmentShader = Trenchant.Cook_Torrance(gl);
         var vertexShader = Trenchant.VertexShader(gl);
 
         M1 = new Trenchant.Material();
@@ -41,8 +44,8 @@
         M1.showSpecularHighlightsUniform = true;
         M1.useLightingUniform = true;
         M1.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
-        M1.pointLightingLocationUniform = new Trenchant.Vector3(-10, 4.0, -20.0);
-        M1.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
+        M1.pointLightingLocationUniform = new Trenchant.Vector3(10, 40.0, -10.0);
+        M1.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.1);
         M1.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
         M1.useTexturesUniform = "none";
         M1.samplerUniform  = 0;
@@ -201,12 +204,12 @@
                object3d.obj_dict[key].material = M1;
                console.log("part: "+key);
             }
-            object3d.obj_dict["HDM_04_10_carpaint"].material = M2;
+            // object3d.obj_dict["HDM_04_10_carpaint"].material = M2;
             
             object3d.obj_dict["HDM_04_10_tire_fl"].material = M3;
-            object3d.obj_dict["HDM_04_10_tire_fr"].material = M3;
-            object3d.obj_dict["HDM_04_10_tire_rr"].material = M3;
-            object3d.obj_dict["HDM_04_10_tire_rl"].material = M3;
+            // object3d.obj_dict["HDM_04_10_tire_fr"].material = M3;
+            // object3d.obj_dict["HDM_04_10_tire_rr"].material = M3;
+            // object3d.obj_dict["HDM_04_10_tire_rl"].material = M3;
             
 		});        
 	}
