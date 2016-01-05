@@ -14,6 +14,7 @@ Trenchant.Ward = function(gl){
 			uniform bool uUseTextures;\
 		\
 			uniform vec3 uAmbientColor;\
+            uniform float uAlapha;\
 		\
 			uniform vec3 uPointLightingLocation;\
 			uniform vec3 uPointLightingSpecularColor;\
@@ -43,7 +44,7 @@ Trenchant.Ward = function(gl){
                     float EH = dot(E, H);\
                     float NE = dot(N, E);\
                     float G = min(1.0, 2.0*NH*NE/EH);\
-                    float omega = 0.1;\
+                    float omega = 0.5;\
                     float gamma = acos(NH);\
                     G = min(G, 2.0*NH*NL/EH);\
                     \
@@ -64,7 +65,7 @@ Trenchant.Ward = function(gl){
 				} else {\
 					fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);\
 				}\
-				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);\
+				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, uAlapha);\
 			}\
     ";
     

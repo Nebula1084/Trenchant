@@ -6,6 +6,7 @@
 		
 		<script type="text/javascript" src="js/Trenchant.js"></script>
         <script type="text/javascript" src="js/obj/Object.js"></script>
+        <script type="text/javascript" src="js/obj/Car.js"></script>
         <script type="text/javascript" src="js/mtl/Material.js"></script>
         <script type="text/javascript" src="js/shader/PhongShader.js"></script>
         <script type="text/javascript" src="js/shader/Cook_Torrance.js"></script>
@@ -19,6 +20,7 @@
 	<script type="text/javascript">
 	
 		var gl;
+        var car;
 	
 		function initGL(canvas) {
 			try {
@@ -31,64 +33,6 @@
 				alert("Could not initialise WebGL, sorry :-(");
 			}
 		}        	
-		var shaderProgram;
-		
-
-    function initShaders() {
-        // var fragmentShader = Trenchant.PhongShader(gl);
-        // var fragmentShader = Trenchant.Cook_Torrance(gl);
-        var fragmentShader = Trenchant.Ward(gl);
-        var vertexShader = Trenchant.VertexShader(gl);
-
-        M1 = new Trenchant.Material();
-
-        M1.showSpecularHighlightsUniform = true;
-        M1.useLightingUniform = true;
-        M1.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
-        M1.pointLightingLocationUniform = new Trenchant.Vector3(90, 90.0, -20.0);
-        M1.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.1);
-        M1.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
-        M1.useTexturesUniform = "none";
-        M1.samplerUniform  = 0;
-        M1.materialShininessUniform = 32.0;
-        
-        
-        M2 = new Trenchant.Material();
-
-        M2.showSpecularHighlightsUniform = true;
-        M2.useLightingUniform = true;
-        M2.ambientColorUniform = new Trenchant.Vector3(0.0, 0.0, 0.0);
-        M2.pointLightingLocationUniform = new Trenchant.Vector3(90, 90.0, -20.0);
-        M2.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.5, 0.5, 0.5);
-        M2.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
-        M2.useTexturesUniform = "none";
-        M2.samplerUniform  = 0;
-        M2.materialShininessUniform = 32.0;
-        
-        M3 = new Trenchant.Material();
-
-        M3.showSpecularHighlightsUniform = false;
-        M3.useLightingUniform = true;
-        M3.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
-        M3.pointLightingLocationUniform = new Trenchant.Vector3(-10, 4.0, -20.0);        
-        M3.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.0, 0.0, 0.0);
-        M3.useTexturesUniform = "none";
-        M3.samplerUniform  = 0;
-        M3.materialShininessUniform = 32.0;
-
-        shaderProgram = gl.createProgram();
-        gl.attachShader(shaderProgram, vertexShader);
-        gl.attachShader(shaderProgram, fragmentShader);
-        gl.linkProgram(shaderProgram);                     
-
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            alert("Could not initialise shaders");
-        }
-        
-        
-
-        
-    }
 
     function handleLoadedTexture(texture) {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -101,29 +45,9 @@
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
-    var earthTexture;
-    var galvanizedTexture;
-
-    function initTextures() {
-        earthTexture = gl.createTexture();
-        earthTexture.image = new Image();
-        earthTexture.image.onload = function () {
-            handleLoadedTexture(earthTexture)
-        }
-        earthTexture.image.src = "textures/earth.jpg";
-
-        galvanizedTexture = gl.createTexture();
-        galvanizedTexture.image = new Image();
-        galvanizedTexture.image.onload = function () {
-            handleLoadedTexture(galvanizedTexture)
-        }
-        galvanizedTexture.image.src = "textures/arroway.de_metal+structure+06_d100_flat.jpg";
-    }
-
     var mvMatrix = mat4.create();
     var mvMatrixStack = [];
     var pMatrix = mat4.create();
-    var object3d;
 
     function mvPushMatrix() {
         var copy = mat4.create();
@@ -158,14 +82,10 @@
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        if (object3d == null) {
+        if (car.object3d==null)
             return;
-        }
 
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);        
-
-        var texture = "none";
-        gl.uniform1i(shaderProgram.useTexturesUniform, texture != "none");
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
 
         mat4.identity(mvMatrix);
 
@@ -173,8 +93,8 @@
         mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
         mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
         
-        setMatrixUniforms();
-        object3d.draw();           
+        car.animate(pMatrix, mvMatrix);
+        car.draw();           
     }
 
     var lastTime = 0;
@@ -196,31 +116,10 @@
         animate();        
     }
 
-	function loadObj() {
-		loader = new Trenchant.OBJLoader();
-		loader.load("obj/car.obj", function(objects){
-			object3d=new Trenchant.Object3D(objects);
-            for (var key in object3d.obj_dict){
-               object3d.obj_dict[key].shaderProgram=shaderProgram;
-               object3d.obj_dict[key].material = M1;
-               console.log("part: "+key);
-            }
-            object3d.obj_dict["HDM_04_10_carpaint"].material = M2;
-            
-            // object3d.obj_dict["HDM_04_10_tire_fl"].material = M3;
-            // object3d.obj_dict["HDM_04_10_tire_fr"].material = M3;
-            // object3d.obj_dict["HDM_04_10_tire_rr"].material = M3;
-            // object3d.obj_dict["HDM_04_10_tire_rl"].material = M3;
-            
-		});        
-	}
-
     function webGLStart() {
         var canvas = document.getElementById("trenchant_canvas");      
-        initGL(canvas);
-        initShaders();
-        initTextures();
-        loadObj();
+        initGL(canvas);        
+        car = new Trenchant.Car();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);

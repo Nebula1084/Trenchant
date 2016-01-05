@@ -24,10 +24,9 @@ Trenchant.Object = function(object){
 Trenchant.Object.prototype = {
 	constructor: Trenchant.Object,
 	draw: function(){
-        
-        this.material.setMat(this.shaderProgram);
-
         gl.useProgram(this.shaderProgram);
+        
+        this.material.setMat(this.shaderProgram);        
 
         this.shaderProgram.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);
@@ -41,15 +40,7 @@ Trenchant.Object.prototype = {
         this.shaderProgram.pMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uPMatrix");
         this.shaderProgram.mvMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
         this.shaderProgram.nMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uNMatrix");
-        this.shaderProgram.samplerUniform = gl.getUniformLocation(this.shaderProgram, "uSampler");
-        this.shaderProgram.materialShininessUniform = gl.getUniformLocation(this.shaderProgram, "uMaterialShininess");
-        this.shaderProgram.showSpecularHighlightsUniform = gl.getUniformLocation(this.shaderProgram, "uShowSpecularHighlights");
-        this.shaderProgram.useTexturesUniform = gl.getUniformLocation(this.shaderProgram, "uUseTextures");
-        this.shaderProgram.useLightingUniform = gl.getUniformLocation(this.shaderProgram, "uUseLighting");
-        this.shaderProgram.ambientColorUniform = gl.getUniformLocation(this.shaderProgram, "uAmbientColor");
-        this.shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingLocation");
-        this.shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingSpecularColor");
-        this.shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(this.shaderProgram, "uPointLightingDiffuseColor");
+
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
         gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -76,9 +67,17 @@ Trenchant.Object3D = function(objects){
 Trenchant.Object3D.prototype = {
 	constructor: Trenchant.Object3D,
 	draw: function(){
-		for (var key in this.obj_dict){
-			this.obj_dict[key].draw();
-		}
+        if (this.drawSequence==undefined){
+            this.obj_dict["HDM_04_10_glass"].draw();
+            for (var key in this.obj_dict){
+                if (key!="HDM_04_10_glass")
+                this.obj_dict[key].draw();
+            }
+        } else {
+            for (var key in this.drawSequence){
+                this.obj_dict[this.drawSequence[key]].draw();
+            }   
+        }        
 	}
 };
 

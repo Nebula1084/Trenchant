@@ -9,14 +9,23 @@ Trenchant.Material = function(){
     this.pointLightingDiffuseColorUniform = new Trenchant.Vector3();
     this.useTexturesUniform = "none";
     this.samplerUniform  = 0;
-    this.materialShininessUniform = 0;    
+    this.materialShininessUniform = 0;
+    this.alphaUniform = 1.0;
 };
 
 Trenchant.Material.prototype = {
     constructor : Trenchant.Material,
     setMat: function(shader){
-        gl.uniform1i(shaderProgram.showSpecularHighlightsUniform, this.showSpecularHighlightsUniform);
-        gl.uniform1i(shaderProgram.useLightingUniform, this.useLightingUniform);
+        if (this.alphaUniform<1.0){                        
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.DST_ALPHA, gl.DST_ALPHA);            
+            gl.disable(gl.DEPTH_TEST);
+        } else {
+            gl.disable(gl.BLEND);
+            gl.enable(gl.DEPTH_TEST);
+        }
+        gl.uniform1i(shader.showSpecularHighlightsUniform, this.showSpecularHighlightsUniform);
+        gl.uniform1i(shader.useLightingUniform, this.useLightingUniform);
         if (this.useLightingUniform) {
             gl.uniform3f(
                 shader.ambientColorUniform,
@@ -46,15 +55,31 @@ Trenchant.Material.prototype = {
                 this.pointLightingDiffuseColorUniform.z
             );
             
-            gl.uniform1i(shaderProgram.useTexturesUniform, this.texture != undefined);
+            gl.uniform1f(
+                shader.alphaUniform,
+                this.alphaUniform
+            );
+            
+            gl.uniform1i(shader.useTexturesUniform, this.texture != undefined);
             
             gl.activeTexture(gl.TEXTURE0);
             if (this.texture != undefined){
                 gl.bindTexture(gl.TEXTURE_2D, this.texture);
             }
             
-            gl.uniform1i(shaderProgram.samplerUniform, this.samplerUniform);
-            gl.uniform1f(shaderProgram.materialShininessUniform, this.materialShininessUniform);
+            gl.uniform1i(shader.samplerUniform, this.samplerUniform);
+            gl.uniform1f(shader.materialShininessUniform, this.materialShininessUniform);
+            
+            shader.samplerUniform = gl.getUniformLocation(shader, "uSampler");
+            shader.materialShininessUniform = gl.getUniformLocation(shader, "uMaterialShininess");
+            shader.showSpecularHighlightsUniform = gl.getUniformLocation(shader, "uShowSpecularHighlights");
+            shader.useTexturesUniform = gl.getUniformLocation(shader, "uUseTextures");
+            shader.useLightingUniform = gl.getUniformLocation(shader, "uUseLighting");
+            shader.ambientColorUniform = gl.getUniformLocation(shader, "uAmbientColor");
+            shader.pointLightingLocationUniform = gl.getUniformLocation(shader, "uPointLightingLocation");
+            shader.pointLightingSpecularColorUniform = gl.getUniformLocation(shader, "uPointLightingSpecularColor");
+            shader.pointLightingDiffuseColorUniform = gl.getUniformLocation(shader, "uPointLightingDiffuseColor");
+            shader.alphaUniform = gl.getUniformLocation(shader, "uAlapha");
         }
     }
 };
