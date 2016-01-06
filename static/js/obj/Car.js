@@ -101,6 +101,16 @@ Trenchant.Car = function(){
     this.carpaint.useTexturesUniform = "none";
     this.carpaint.samplerUniform  = 0;
     this.carpaint.materialShininessUniform = 32.0;
+    // this.carpaint.setTexture("textures/negx.jpg");
+    var cube = [
+        "textures/posx.jpg",
+        "textures/negx.jpg",
+        "textures/posy.jpg",
+        "textures/negy.jpg",
+        "textures/posz.jpg",
+        "textures/negz.jpg"
+    ];
+    this.carpaint.setEnvTexture(cube);
     
     this.tire = new Trenchant.Material();
     this.tire.showSpecularHighlightsUniform = true;
