@@ -80,7 +80,6 @@ Trenchant.Car = function(){
     }
     
     this.M1 = new Trenchant.Material();
-
     this.M1.showSpecularHighlightsUniform = true;
     this.M1.useLightingUniform = true;
     this.M1.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
@@ -93,19 +92,28 @@ Trenchant.Car = function(){
     
     
     this.carpaint = new Trenchant.Material();
-
     this.carpaint.showSpecularHighlightsUniform = true;
     this.carpaint.useLightingUniform = true;
-    this.carpaint.ambientColorUniform = new Trenchant.Vector3(0.3, 0.3, 0.3);
+    this.carpaint.ambientColorUniform = new Trenchant.Vector3(0.2, 0, 0);
     this.carpaint.pointLightingLocationUniform = new Trenchant.Vector3(0, 90.0, 20.0);
-    this.carpaint.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
-    this.carpaint.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.7, 0.7, 0.7);
+    this.carpaint.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.9, 0.09, 0.09);
+    this.carpaint.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.2, 0.05, 0.05);
     this.carpaint.useTexturesUniform = "none";
     this.carpaint.samplerUniform  = 0;
     this.carpaint.materialShininessUniform = 32.0;
     
+    this.tire = new Trenchant.Material();
+    this.tire.showSpecularHighlightsUniform = true;
+    this.tire.useLightingUniform = true;
+    this.tire.ambientColorUniform = new Trenchant.Vector3(0.2, 0, 0);
+    this.tire.pointLightingLocationUniform = new Trenchant.Vector3(0, 90.0, 20.0);
+    this.tire.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.9, 0.09, 0.09);
+    this.tire.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.2, 0.05, 0.05);
+    this.tire.useTexturesUniform = "none";
+    this.tire.samplerUniform  = 0;
+    this.tire.materialShininessUniform = 32.0;
+    
     this.plastic = new Trenchant.Material();
-
     this.plastic.showSpecularHighlightsUniform = true;
     this.plastic.useLightingUniform = true;
     this.plastic.ambientColorUniform = new Trenchant.Vector3(0.1, 0.1, 0.1);
@@ -117,28 +125,26 @@ Trenchant.Car = function(){
     this.plastic.materialShininessUniform = 32.0;
     
     this.M3 = new Trenchant.Material();
-
     this.M3.showSpecularHighlightsUniform = false;
     this.M3.useLightingUniform = true;
-    this.M3.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
+    this.M3.ambientColorUniform = new Trenchant.Vector3(0.04, 0.04, 0.04);
     this.M3.pointLightingLocationUniform = new Trenchant.Vector3(-10, 4.0, -20.0);        
-    this.M3.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.0, 0.0, 0.0);
+    this.M3.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.09, 0.09, 0.09);
     this.M3.useTexturesUniform = "none";
     this.M3.samplerUniform  = 0;
     this.M3.materialShininessUniform = 32.0;
     
-    this.M4 = new Trenchant.Material();
-
-    this.M4.showSpecularHighlightsUniform = true;
-    this.M4.useLightingUniform = true;
-    this.M4.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
-    this.M4.pointLightingLocationUniform = new Trenchant.Vector3(90, 90.0, -20.0);
-    this.M4.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
-    this.M4.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
-    this.M4.useTexturesUniform = "none";
-    this.M4.samplerUniform  = 0;
-    this.M4.materialShininessUniform = 32.0;
-    this.M4.alphaUniform = 0.5;
+    this.glass = new Trenchant.Material();
+    this.glass.showSpecularHighlightsUniform = true;
+    this.glass.useLightingUniform = true;
+    this.glass.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
+    this.glass.pointLightingLocationUniform = new Trenchant.Vector3(90, 90.0, -20.0);
+    this.glass.pointLightingSpecularColorUniform = new Trenchant.Vector3(1, 1, 1);
+    this.glass.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
+    this.glass.useTexturesUniform = "none";
+    this.glass.samplerUniform  = 0;
+    this.glass.materialShininessUniform = 38;
+    this.glass.alphaUniform = 0.1;
     var scope = this;
         
     loader.load("obj/car.obj", function(objects){
@@ -152,19 +158,27 @@ Trenchant.Car = function(){
             console.log("part: "+key);
         }
         scope.object3d.obj_dict["HDM_04_10_carpaint"].material = scope.carpaint;
-        
-        scope.object3d.obj_dict["HDM_04_10_glass"].material = scope.M4;
-        scope.object3d.obj_dict["HDM_04_10_glass_orange"].material = scope.M4;
-        scope.object3d.obj_dict["HDM_04_10_glass_ms"].material = scope.M4;
-        scope.object3d.obj_dict["HDM_04_10_glass_black"].material = scope.M4;
-        scope.object3d.obj_dict["HDM_04_10_glass_red_ms"].material = scope.M4;
-        scope.object3d.obj_dict["HDM_04_10_taillight_glass"].material = scope.M4;
-        scope.object3d.obj_dict["HDM_04_10_register_plate"].material = scope.M4;        
+       
+        scope.object3d.obj_dict["HDM_04_10_glass"].shaderProgram = scope.PhongMesh; 
+        scope.object3d.obj_dict["HDM_04_10_glass"].material = scope.glass;
+        scope.object3d.obj_dict["HDM_04_10_glass_orange"].shaderProgram = scope.PhongMesh;
+        scope.object3d.obj_dict["HDM_04_10_glass_orange"].material = scope.glass;
+                scope.object3d.obj_dict["HDM_04_10_glass_ms"].shaderProgram = scope.PhongMesh;
+        scope.object3d.obj_dict["HDM_04_10_glass_ms"].material = scope.glass;
+                scope.object3d.obj_dict["HDM_04_10_glass_black"].shaderProgram = scope.PhongMesh;
+        scope.object3d.obj_dict["HDM_04_10_glass_black"].material = scope.glass;
+                scope.object3d.obj_dict["HDM_04_10_glass"].shaderProgram = scope.PhongMesh;
+        scope.object3d.obj_dict["HDM_04_10_glass_red_ms"].material = scope.glass;
+        scope.object3d.obj_dict["HDM_04_10_taillight_glass"].material = scope.glass;
+        scope.object3d.obj_dict["HDM_04_10_register_plate"].material = scope.glass;        
         scope.object3d.obj_dict["HDM_04_10_tire_fl"].material = scope.M3;
         //scope.object3d.obj_dict["HDM_04_10_tire_fl"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_tire_fr"].material = scope.M3;
         scope.object3d.obj_dict["HDM_04_10_tire_rr"].material = scope.M3;
         scope.object3d.obj_dict["HDM_04_10_tire_rl"].material = scope.M3;
+         scope.object3d.obj_dict["HDM_04_10_rim_rl"].material = scope.M3;
+        
+       
         
         scope.object3d.obj_dict["HDM_04_10_black_plastic_ms"].shaderProgram = scope.TorranceMesh;
         scope.object3d.obj_dict["HDM_04_10_black_plastic_ms"].material = scope.plastic;
