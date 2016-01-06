@@ -7,7 +7,8 @@
 		<script type="text/javascript" src="js/Trenchant.js"></script>
         <script type="text/javascript" src="js/obj/Object.js"></script>
         <script type="text/javascript" src="js/obj/Car.js"></script>
-        <script type="text/javascript" src="js/mtl/Material.js"></script>
+        <script type="text/javascript" src="js/obj/Animate.js"></script>
+        <script type="text/javascript" src="js/obj/Material.js"></script>
         <script type="text/javascript" src="js/shader/PhongShader.js"></script>
         <script type="text/javascript" src="js/shader/Cook_Torrance.js"></script>
         <script type="text/javascript" src="js/shader/Ward.js"></script>
@@ -92,8 +93,7 @@
         mat4.translate(mvMatrix, [0, 0, -800]);
         mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
         mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
-        
-        car.animate(pMatrix, mvMatrix);
+                
         car.draw();           
     }
 
@@ -112,6 +112,7 @@
 
     function tick() {
         requestAnimFrame(tick);
+        car.setAnimate(pMatrix, mvMatrix);
         drawScene();
         animate();        
     }

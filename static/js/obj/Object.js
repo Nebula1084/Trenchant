@@ -1,3 +1,4 @@
+/* global gl */
 /* global Trenchant */
 Trenchant.Object = function(object){
 	var geometry = object.geometry;
@@ -26,7 +27,8 @@ Trenchant.Object.prototype = {
 	draw: function(){
         gl.useProgram(this.shaderProgram);
         
-        this.material.setMat(this.shaderProgram);        
+        this.material.setMat(this.shaderProgram);
+        this.animation.animate(this.shaderProgram);
 
         this.shaderProgram.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);

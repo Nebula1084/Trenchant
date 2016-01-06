@@ -27,10 +27,6 @@ Trenchant.Ward = function(gl){
 				vec3 lightWeighting;\
                 float cook;\
                 float diff;\
-                float Kn = 3.0;\
-                float Kc = 0.2;\
-                float Km = 0.3;\
-                float Kr = 0.9;\
 				if (!uUseLighting) {\
 					lightWeighting = vec3(1.0, 1.0, 1.0);\
 				} else {\
@@ -43,13 +39,9 @@ Trenchant.Ward = function(gl){
                     float NL = dot(N, L);\
                     float EH = dot(E, H);\
                     float NE = dot(N, E);\
-                    float G = min(1.0, 2.0*NH*NE/EH);\
                     float omega = 0.5;\
                     float gamma = acos(NH);\
-                    G = min(G, 2.0*NH*NL/EH);\
                     \
-                    float alpha=acos(NH);\
-                    float D = Kc*exp(-pow(alpha/Km, 2.0));\
 					float diffuseLightWeighting = max(dot(N, L), 0.0);\
                     float ward=exp(-pow(tan(gamma)/omega, 2.0))*sqrt(NL/NE)/4.0/pow(gamma,2.0);\
                     float specularLightWeighting = ward;\

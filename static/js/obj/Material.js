@@ -17,9 +17,9 @@ Trenchant.Material.prototype = {
     constructor : Trenchant.Material,
     setMat: function(shader){
         if (this.alphaUniform<1.0){                        
-            gl.enable(gl.BLEND);
-            gl.blendFunc(gl.DST_ALPHA, gl.DST_ALPHA);            
-            gl.disable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);                 
+            gl.enable(gl.DEPTH_TEST);
+            gl.blendFunc(gl.SRC_ALPHA , gl.ONE_MINUS_SRC_ALPHA );                   
         } else {
             gl.disable(gl.BLEND);
             gl.enable(gl.DEPTH_TEST);

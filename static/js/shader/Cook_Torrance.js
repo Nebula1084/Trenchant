@@ -28,7 +28,7 @@ Trenchant.Cook_Torrance = function(gl){
                 float Kn = 3.0;\
                 float Kc = 0.2;\
                 float Km = 0.3;\
-                float Kr = 0.9;\
+                float Kr = 0.5;\
 				if (!uUseLighting) {\
 					lightWeighting = vec3(1.0, 1.0, 1.0);\
 				} else {\
