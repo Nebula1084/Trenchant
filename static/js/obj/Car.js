@@ -103,6 +103,7 @@ Trenchant.Car = function(){
     this.carpaint.useTexturesUniform = "none";
     this.carpaint.samplerUniform  = 0;
     this.carpaint.materialShininessUniform = 32.0;
+    this.carpaint.setTexture("textures/negx.jpg");
     
     this.plastic = new Trenchant.Material();
 

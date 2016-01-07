@@ -64,6 +64,7 @@ Trenchant.Material.prototype = {
             
             gl.activeTexture(gl.TEXTURE0);
             if (this.texture != undefined){
+                gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, this.texture);
             }
             
@@ -81,6 +82,26 @@ Trenchant.Material.prototype = {
             shader.pointLightingDiffuseColorUniform = gl.getUniformLocation(shader, "uPointLightingDiffuseColor");
             shader.alphaUniform = gl.getUniformLocation(shader, "uAlapha");
         }
+    },
+    setTexture: function(src){
+        function handleLoadedTexture(texture) {
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            gl.generateMipmap(gl.TEXTURE_2D);
+
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        }
+        
+        var texture = gl.createTexture();
+        texture.image = new Image();
+        
+        texture.image.onload = function(){
+            handleLoadedTexture(texture);
+        }
+        texture.image.src = src;
+        this.texture=texture;
     }
 };
-
