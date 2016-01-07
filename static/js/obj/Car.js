@@ -173,12 +173,14 @@ Trenchant.Car = function(){
         scope.object3d.obj_dict["HDM_04_10_glass"].material = scope.glass;
         scope.object3d.obj_dict["HDM_04_10_glass_orange"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_glass_orange"].material = scope.glass;
-                scope.object3d.obj_dict["HDM_04_10_glass_ms"].shaderProgram = scope.PhongMesh;
+        scope.object3d.obj_dict["HDM_04_10_glass_ms"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_glass_ms"].material = scope.glass;
-                scope.object3d.obj_dict["HDM_04_10_glass_black"].shaderProgram = scope.PhongMesh;
+        scope.object3d.obj_dict["HDM_04_10_glass_black"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_glass_black"].material = scope.glass;
-                scope.object3d.obj_dict["HDM_04_10_glass"].shaderProgram = scope.PhongMesh;
+        
+        scope.object3d.obj_dict["HDM_04_10_glass"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_glass_red_ms"].material = scope.glass;
+        
         scope.object3d.obj_dict["HDM_04_10_taillight_glass"].material = scope.glass;
         scope.object3d.obj_dict["HDM_04_10_register_plate"].material = scope.glass;        
         scope.object3d.obj_dict["HDM_04_10_tire_fl"].material = scope.M3;
@@ -186,7 +188,7 @@ Trenchant.Car = function(){
         scope.object3d.obj_dict["HDM_04_10_tire_fr"].material = scope.M3;
         scope.object3d.obj_dict["HDM_04_10_tire_rr"].material = scope.M3;
         scope.object3d.obj_dict["HDM_04_10_tire_rl"].material = scope.M3;
-         scope.object3d.obj_dict["HDM_04_10_rim_rl"].material = scope.M3;
+        scope.object3d.obj_dict["HDM_04_10_rim_rl"].material = scope.M3;
         
        
         
