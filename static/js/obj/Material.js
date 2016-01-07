@@ -103,5 +103,38 @@ Trenchant.Material.prototype = {
         }
         texture.image.src = src;
         this.texture=texture;
+    },
+    setEnvTexture: function(cube){
+        var targets = [gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+                      gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+                      gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+                      gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+                      gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+                      gl.TEXTURE_CUBE_MAP_NEGATIVE_Z];
+        function handleLoadedTexture(texture) {
+            texture.count--;
+            if (texture.count == 0){
+                gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+ 
+                for (var i = 0; i < targets.length; i++) {
+                    gl.texImage2D(targets[i], 0, gl.RGBA, texture.cube[i].width, texture.cube[i].height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                }
+            }
+        }
+        var texture = gl.createTexture();
+        texture.cube = [];
+        texture.count = 6;
+        for (var i = 0; i < 6; i++){
+            texture.cube[i] = new Image();
+            texture.cube[i].onload = function(){
+                handleLoadedTexture(texture);
+            }
+            texture.cube[i].src = cube[i];
+        }
+        this.cubeTexture = texture;
     }
 };
