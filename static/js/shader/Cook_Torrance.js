@@ -13,6 +13,7 @@ Trenchant.Cook_Torrance = function(gl){
 			uniform bool uUseTextures;\
 		\
 			uniform vec3 uAmbientColor;\
+            uniform float uAlapha;\
 		\
 			uniform vec3 uPointLightingLocation;\
 			uniform vec3 uPointLightingSpecularColor;\
@@ -65,7 +66,7 @@ Trenchant.Cook_Torrance = function(gl){
 				} else {\
 					fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);\
 				}\
-				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);\
+				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, uAlapha);\
 			}\
     ";
     
