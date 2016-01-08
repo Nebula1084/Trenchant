@@ -3,7 +3,9 @@
 <html lang="en">
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-		
+		<script type="text/javascript" src="js/libs/webgl-utils.js"></script>
+        <script type="text/javascript" src="js/libs/jquery.min.js"></script>
+        <script type="text/javascript" src="js/libs/glMatrix-0.9.5.min.js"></script>
 		<script type="text/javascript" src="js/Trenchant.js"></script>
         <script type="text/javascript" src="js/obj/Object.js"></script>
         <script type="text/javascript" src="js/obj/Car.js"></script>
@@ -13,15 +15,18 @@
         <script type="text/javascript" src="js/shader/Cook_Torrance.js"></script>
         <script type="text/javascript" src="js/shader/Ward.js"></script>
         <script type="text/javascript" src="js/shader/VertexShader.js"></script>
-        <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>
-		<script type="text/javascript" src="js/libs/glMatrix-0.9.5.min.js"></script>
-		<script type="text/javascript" src="js/libs/webgl-utils.js"></script>
-		<script type="text/javascript" src="js/libs/jquery.min.js"></script>
+        <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>				
 		
 	<script type="text/javascript">
 	
 		var gl;
         var car;
+        
+        Trenchant.eyePos = [0.0, 0.0, 100.0];
+        Trenchant.eyeLookat = [0.0, 0.0, -1000.0];
+        Trenchant.viewMatrix = mat4.create();
+        
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 	
 		function initGL(canvas) {
 			try {
@@ -33,79 +38,97 @@
 			if (!gl) {
 				alert("Could not initialise WebGL, sorry :-(");
 			}
-		}        	
-
-    var mvMatrix = mat4.create();
-    var mvMatrixStack = [];
-    var pMatrix = mat4.create();
-
-    function mvPushMatrix() {
-        var copy = mat4.create();
-        mat4.set(mvMatrix, copy);
-        mvMatrixStack.push(copy);
-    }
-
-    function mvPopMatrix() {
-        if (mvMatrixStack.length == 0) {
-            throw "Invalid popMatrix!";
-        }
-        mvMatrix = mvMatrixStack.pop();
-    }
-
-    function degToRad(degrees) {
-        return degrees * Math.PI / 180;
-    }	
-	
-    var teapotAngle = 180;
-
-    function drawScene() {        
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        if (car.object3d==null)
-            return;
-
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
-
-        mat4.identity(mvMatrix);
-
-        mat4.translate(mvMatrix, [0, 0, -800]);
-        mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
-        mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+		}
                 
-        car.draw();           
-    }
+        var windowHalfX = window.innerWidth / 2;
+        var windowHalfY = window.innerHeight / 2;
+        var mvMatrix = mat4.create();
+        var mvMatrixStack = [];
+        var pMatrix = mat4.create();
+        var viewMatrix = mat4.create();
 
-    var lastTime = 0;
-
-    function animate() {
-        var timeNow = new Date().getTime();
-        if (lastTime != 0) {
-            var elapsed = timeNow - lastTime;
-
-            teapotAngle += 0.05 * elapsed;
+        function mvPushMatrix() {
+            var copy = mat4.create();
+            mat4.set(mvMatrix, copy);
+            mvMatrixStack.push(copy);
         }
-        lastTime = timeNow;
-    }
 
+        function mvPopMatrix() {
+            if (mvMatrixStack.length == 0) {
+                throw "Invalid popMatrix!";
+            }
+            mvMatrix = mvMatrixStack.pop();
+        }
 
-    function tick() {
-        requestAnimFrame(tick);
-        car.setAnimate(pMatrix, mvMatrix);
-        drawScene();
-        animate();        
-    }
-
-    function webGLStart() {
-        var canvas = document.getElementById("trenchant_canvas");      
-        initGL(canvas);        
-        car = new Trenchant.Car();
-
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
+        function degToRad(degrees) {
+            return degrees * Math.PI / 180;
+        }	
         
-        tick();
-    }
+        var teapotAngle = 180;
+
+        function drawScene() {        
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            if (car.object3d==null)
+                return;
+
+            mat4.lookAt(Trenchant.eyePos, Trenchant.eyeLookat, [0.0, 1.0, 0.0], Trenchant.viewMatrix);
+            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+            mat4.multiply(pMatrix, Trenchant.viewMatrix, pMatrix);
+
+            mat4.identity(mvMatrix);
+
+            mat4.translate(mvMatrix, [0, 0, -800]);
+            mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
+            mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+            
+            
+                    
+                    
+            car.draw();           
+        }
+
+        var lastTime = 0;
+
+        function animate() {
+            var timeNow = new Date().getTime();
+            if (lastTime != 0) {
+                var elapsed = timeNow - lastTime;
+
+                teapotAngle += 0.05 * elapsed;
+            }
+            lastTime = timeNow;
+        }
+
+
+        function tick() {
+            requestAnimFrame(tick);
+            car.setAnimate(pMatrix, mvMatrix);
+            drawScene();
+            animate();        
+        }
+        
+        function onDocumentMouseMove( event ) {
+
+            var mx = ( event.clientX - windowHalfX );
+            var my = ( event.clientY - windowHalfY );
+            
+            Trenchant.eyeLookat[0]=mx;
+            Trenchant.eyeLookat[1]=my;
+
+        }
+
+        function webGLStart() {
+            var canvas = document.getElementById("trenchant_canvas");      
+            initGL(canvas);        
+            car = new Trenchant.Car();
+
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+            
+            tick();
+        }
 	
 	</script>
 	</head>

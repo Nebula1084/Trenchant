@@ -1,3 +1,4 @@
+/* global vec3 */
 /* global gl */
 /* global Trenchant */
 Trenchant = function(){
