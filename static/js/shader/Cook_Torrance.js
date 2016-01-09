@@ -13,6 +13,7 @@ Trenchant.Cook_Torrance = function(gl){
 			uniform bool uUseTextures;\
 		\
 			uniform vec3 uAmbientColor;\
+            uniform vec3 uEyeLocation;\
             uniform float uAlapha;\
 		\
 			uniform vec3 uPointLightingLocation;\

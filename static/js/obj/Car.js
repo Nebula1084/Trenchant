@@ -75,6 +75,10 @@ Trenchant.Car = function(){
     this.TorranceMesh = createProgram(Trenchant.Cook_Torrance(gl), Trenchant.VertexShader(gl));
     
     this.am = new Trenchant.Animate();
+    this.wheel_rl = new Trenchant.Animate();
+    this.wheel_rr = new Trenchant.Animate();
+    this.wheel_fl = new Trenchant.Animate();
+    this.wheel_fr = new Trenchant.Animate();
     
     if (!gl.getProgramParameter(this.WardMesh, gl.LINK_STATUS)) {
             alert("Could not initialise shaders");
@@ -263,6 +267,17 @@ Trenchant.Car = function(){
             scope.object3d.obj_dict[key].animation = scope.am;
             console.log("part: "+key);
         }
+//animation        
+        scope.object3d.obj_dict["HDM_04_10_tire_fl"].animation = scope.wheel_fl;
+        scope.object3d.obj_dict["HDM_04_10_tire_fr"].animation = scope.wheel_fr;
+        scope.object3d.obj_dict["HDM_04_10_tire_rr"].animation = scope.wheel_rr;
+        scope.object3d.obj_dict["HDM_04_10_tire_rl"].animation = scope.wheel_rl;
+
+        scope.object3d.obj_dict["HDM_04_10_rim_rl"].animation = scope.wheel_rl;
+        scope.object3d.obj_dict["HDM_04_10_rim_rr"].animation = scope.wheel_rr;
+        scope.object3d.obj_dict["HDM_04_10_rim_fl"].animation = scope.wheel_fl;
+        scope.object3d.obj_dict["HDM_04_10_rim_fr"].animation = scope.wheel_fr;
+        
         
         scope.object3d.obj_dict["HDM_04_10_gauges"].material = scope.M0;
         
@@ -337,9 +352,25 @@ Trenchant.Car = function(){
 
 Trenchant.Car.prototype = {
     constructor: Trenchant.Car,
-    setAnimate: function(pMatrix, mvMatrix){
+    setBodyAnimate: function(pMatrix, mvMatrix){
         this.am.pMatrix = pMatrix;
         this.am.mvMatrix = mvMatrix;
+    },
+    setWheelRL: function(pMatrix, mvMatrix){
+        this.wheel_rl.pMatrix = pMatrix;
+        this.wheel_rl.mvMatrix = mvMatrix;        
+    },
+    setWheelRR: function(pMatrix, mvMatrix){
+        this.wheel_rr.pMatrix = pMatrix;
+        this.wheel_rr.mvMatrix = mvMatrix;        
+    },
+    setWheelFL: function(pMatrix, mvMatrix){
+        this.wheel_fl.pMatrix = pMatrix;
+        this.wheel_fl.mvMatrix = mvMatrix;        
+    },
+    setWheelFR: function(pMatrix, mvMatrix){
+        this.wheel_fr.pMatrix = pMatrix;
+        this.wheel_fr.mvMatrix = mvMatrix;        
     },
     draw: function(){
         this.object3d.draw();
