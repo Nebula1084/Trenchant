@@ -30,7 +30,8 @@ Trenchant.Material.prototype = {
         shader.pointLightingSpecularColorUniform = gl.getUniformLocation(shader, "uPointLightingSpecularColor");
         shader.pointLightingDiffuseColorUniform = gl.getUniformLocation(shader, "uPointLightingDiffuseColor");
         shader.alphaUniform = gl.getUniformLocation(shader, "uAlapha");
-            
+        gl.uniform1i(shader.useTexturesUniform, this.texture != undefined);
+        gl.uniform1i(shader.useEnvUniform, this.cubeTexture != undefined);
         if (this.alphaUniform<1.0){                        
             gl.enable(gl.BLEND);                 
             gl.enable(gl.DEPTH_TEST);
@@ -73,20 +74,18 @@ Trenchant.Material.prototype = {
             gl.uniform1f(
                 shader.alphaUniform,
                 this.alphaUniform
-            );
-            
-            gl.uniform1i(shader.useTexturesUniform, this.texture != undefined);
-            gl.uniform1i(shader.useEnvUniform, this.cubeTexture != undefined);
-            
+            );                        
+            gl.uniform1i(shader.samplerUniform, 0);
+            gl.uniform1i(shader.mapCubeUniform, 1);
             if (this.texture != undefined){
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, this.texture);
-                gl.uniform1i(shader.samplerUniform, 0);
+                
             }
             if (this.cubeTexture != undefined){
                 gl.activeTexture(gl.TEXTURE1);
                 gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cubeTexture);
-                gl.uniform1i(shader.mapCubeUniform, 1);
+                
             }
                         
             gl.uniform1f(shader.materialShininessUniform, this.materialShininessUniform);

@@ -1,0 +1,5 @@
+*.obj
+*.mtl
+*.json
+*.DS_*
+example
