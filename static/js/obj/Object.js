@@ -56,6 +56,7 @@ Trenchant.Object.prototype = {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
         gl.vertexAttribPointer(this.shaderProgram.vertexNormalAttribute, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
+        //console.log(this.name + " " + this.vertexNormalBuffer.numItems);
         gl.drawArrays(gl.TRIANGLES, 0, this.vertexNormalBuffer.numItems); 
 	},
 	drawShadow: function() {
@@ -79,9 +80,7 @@ Trenchant.Object3D.prototype = {
 	constructor: Trenchant.Object3D,
 	draw: function(){
         if (this.drawSequence==undefined){
-            this.obj_dict["HDM_04_10_glass"].draw();
             for (var key in this.obj_dict){
-                if (key!="HDM_04_10_glass")
                 this.obj_dict[key].draw();
             }
         } else {

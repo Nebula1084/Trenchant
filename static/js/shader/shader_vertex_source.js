@@ -2,7 +2,7 @@ shader_vertex_source = function(gl){
     var str = "\n\
 attribute vec3 position, normal;\n\
 attribute vec2 uv;\n\
-uniform mat4 Pmatrix, Vmatrix, Mmatrix, Lmatrix, PmatrixLight;\n\
+uniform mat4 Pmatrix, MVmatrix, Lmatrix, PmatrixLight;\n\
 varying vec2 vUV;\n\
 varying vec3 vNormal, vLightPos;\n\
 \n\
@@ -14,7 +14,7 @@ lightPos=PmatrixLight*lightPos;\n\
 vec3 lightPosDNC=lightPos.xyz/lightPos.w;\n\
 vLightPos=vec3(0.5,0.5,0.5)+lightPosDNC*0.5;\n\
 \n\
-gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(position, 1.);\n\
+gl_Position = Pmatrix*MVmatrix*vec4(position, 1.);\n\
 \n\
 vNormal=normal;\n\
 vUV=uv;\n\

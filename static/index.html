@@ -9,6 +9,7 @@
         <script type="text/javascript" src="js/Trenchant.js"></script>
         <script type="text/javascript" src="js/obj/Object.js"></script>
         <script type="text/javascript" src="js/obj/Car.js"></script>
+        <script type="text/javascript" src="js/obj/scene.js"></script>
         <script type="text/javascript" src="js/obj/Animate.js"></script>
         <script type="text/javascript" src="js/obj/Material.js"></script>
         <script type="text/javascript" src="js/shader/PhongShader.js"></script>
@@ -27,6 +28,7 @@
     
         var gl;
         var car;
+        var scene;
         var canvas;
         
         Trenchant.eyePos = [0.0, 0.0, 100.0];
@@ -81,6 +83,8 @@
 
             if (car.object3d==null)
                 return;
+            if (scene.object3d==null)
+                return;
 
             mat4.lookAt(Trenchant.eyePos, Trenchant.eyeLookat, [0.0, 1.0, 0.0], Trenchant.viewMatrix);
             mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
@@ -92,9 +96,10 @@
             mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
             mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
             
-            renderShadowMap();
-            drawFloor();
-            car.draw();
+            //renderShadowMap();
+            //drawFloor();
+            //car.draw();
+            scene.draw();
             gl.flush();
         }
 
@@ -118,13 +123,14 @@
 
         var SHADER_PROGRAM_SHADOW, SHADER_PROGRAM;
         var _positionShadow, _PmatrixShadow, _LmatrixShadow;
-        var PROJMATRIX_SHADOW, LIGHTMATRIX;
+        var PROJMATRIX_SHADOW, LIGHTMATRIX, MVMATRIX;
         var FLOOR_VERTEX, FLOOR_INDICES;
+        var CUBE_VERTEX=false, CUBE_FACES=false, CUBE_NPOINTS=0;
 
         var _uv, _position, _normal;
-        var _Pmatrix, _Vmatrix, _Mmatrix, _PmatrixLight, _Lmatrix;
-        var VIEWMATRIX, MOVEMATRIX;
-        var floor_texture;
+        var _Pmatrix, _MVmatrix, _PmatrixLight, _Lmatrix;
+        var _mvMatrix, MVMATRIX;
+        var floor_texture, cube_texture;
         var LIGHTDIR;
         var fb, rb;
 
@@ -139,6 +145,15 @@
 
             gl.uniformMatrix4fv(_PmatrixShadow, false, PROJMATRIX_SHADOW);
             gl.uniformMatrix4fv(_LmatrixShadow, false, LIGHTMATRIX);
+            gl.uniformMatrix4fv(_mvMatrix, false, MVMATRIX);
+            //car.drawShadow();
+            gl.bindBuffer(gl.ARRAY_BUFFER, CUBE_VERTEX);
+            gl.vertexAttribPointer(_positionShadow, 3, gl.FLOAT, false,4*(3+3+2),0) ;
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CUBE_FACES);
+            gl.drawElements(gl.TRIANGLES, CUBE_NPOINTS, gl.UNSIGNED_INT, 0);
+
+            gl.uniformMatrix4fv(_mvMatrix, false, MVMATRIX);
 
             //DRAW THE FLOOR
             gl.bindBuffer(gl.ARRAY_BUFFER, FLOOR_VERTEX);
@@ -146,8 +161,6 @@
 
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
             gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-
-            car.drawShadow();
 
             gl.disableVertexAttribArray(_positionShadow);
         }
@@ -164,14 +177,29 @@
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             gl.uniformMatrix4fv(_Pmatrix, false, pMatrix);
-            gl.uniformMatrix4fv(_Vmatrix, false, VIEWMATRIX);
-            gl.uniformMatrix4fv(_Mmatrix, false, MOVEMATRIX);
+            gl.uniformMatrix4fv(_MVmatrix, false, MVMATRIX);
             gl.uniformMatrix4fv(_PmatrixLight, false, PROJMATRIX_SHADOW);
             gl.uniformMatrix4fv(_Lmatrix, false, LIGHTMATRIX);
 
+            //DRAW THE DRAGON
+            if (cube_texture.webglTexture) {
+              gl.activeTexture(gl.TEXTURE1);
+              gl.bindTexture(gl.TEXTURE_2D, texture_rtt);
+              gl.activeTexture(gl.TEXTURE0);
+              gl.bindTexture(gl.TEXTURE_2D, cube_texture.webglTexture);
+            }
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, CUBE_VERTEX);
+            gl.vertexAttribPointer(_position, 3, gl.FLOAT, false,4*(3+3+2),0) ;
+            gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false,4*(3+3+2),3*4) ;
+            gl.vertexAttribPointer(_uv, 2, gl.FLOAT, false,4*(3+3+2),(3+3)*4) ;
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CUBE_FACES);
+            gl.drawElements(gl.TRIANGLES, CUBE_NPOINTS, gl.UNSIGNED_INT, 0);
+
+            gl.uniformMatrix4fv(_MVmatrix, false, MVMATRIX);
+
             if (floor_texture.webglTexture) {
-                gl.activeTexture(gl.TEXTURE1);
-                gl.bindTexture(gl.TEXTURE_2D, texture_rtt);
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, floor_texture.webglTexture);
             }
@@ -200,6 +228,8 @@
             car.setWheelRR(pMatrix, mvMatrix);
             car.setWheelFL(pMatrix, mvMatrix);
             car.setWheelFR(pMatrix, mvMatrix);
+
+            scene.setBodyAnimate(pMatrix, mvMatrix);
             drawScene();
             animate();        
         }
@@ -243,7 +273,7 @@
             _PmatrixShadow = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "Pmatrix");
             _LmatrixShadow = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "Lmatrix");
             _positionShadow = gl.getAttribLocation(SHADER_PROGRAM_SHADOW, "position");
-
+            _mvMatrix = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "mvMatrix");
 
             //BUILD DEFAULT RENDERING SHP
             var shader_vertex=shader_vertex_source(gl);
@@ -256,8 +286,7 @@
             gl.linkProgram(SHADER_PROGRAM);
 
             _Pmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Pmatrix");
-            _Vmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Vmatrix");
-            _Mmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Mmatrix");
+            _MVmatrix = gl.getUniformLocation(SHADER_PROGRAM, "MVmatrix");
             _Lmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Lmatrix");
             _PmatrixLight = gl.getUniformLocation(SHADER_PROGRAM, "PmatrixLight");
             _lightDirection = gl.getUniformLocation(SHADER_PROGRAM, "source_direction");
@@ -271,16 +300,33 @@
             gl.useProgram(SHADER_PROGRAM);
             gl.uniform1i(_sampler, 0);
             gl.uniform1i(_samplerShadowMap, 1);
-            LIGHTDIR=[0.58,0.58,-10];
+            LIGHTDIR=[0.58,0.58,-0.58];
             gl.uniform3fv(_lightDirection, LIGHTDIR);
+        }
+
+        function initDragon() {
+            LIBS.get_json("textures/dragon.json", function(dragon){
+                //vertices
+                CUBE_VERTEX= gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, CUBE_VERTEX);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(dragon.vertices), gl.STATIC_DRAW);
+
+                //faces
+                CUBE_FACES=gl.createBuffer ();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CUBE_FACES);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(dragon.indices), gl.STATIC_DRAW);
+
+                CUBE_NPOINTS=dragon.indices.length;
+                tick();
+          });
         }
 
         function initFloor() {
             var floor_vertices=[
-                -200,0,-200,   0,1,0,   0,0, //1st point position,normal and UV
-                -200,0, 200,   0,1,0,   0,1, //2nd point
-                200,0, 200,   0,1,0,   1,1,
-                200,0,-200,   0,1,0,   1,0
+                -10,0,-10,   0,1,0,   0,0, //1st point position,normal and UV
+                -10,0, 10,   0,1,0,   0,1, //2nd point
+                10,0, 10,   0,1,0,   1,1,
+                10,0,-10,   0,1,0,   1,0
             ];
 
             FLOOR_VERTEX= gl.createBuffer();
@@ -295,11 +341,10 @@
 
         function initMatrix() {
             pMatrix=LIBS.get_projection(40, canvas.width/canvas.height, 1, 100);
-            MOVEMATRIX=LIBS.get_I4();
-            VIEWMATRIX=LIBS.get_I4();
+            MVMATRIX=LIBS.get_I4();
 
-            LIBS.translateZ(VIEWMATRIX, -500);
-            LIBS.translateY(VIEWMATRIX, -100);
+            LIBS.translateZ(MVMATRIX, -20);
+            LIBS.translateY(MVMATRIX, -4);
 
             PROJMATRIX_SHADOW=LIBS.get_projection_ortho(20, 1, 5, 28);
             LIGHTMATRIX=LIBS.lookAtDir(LIGHTDIR, [0,1,0], [0,0,0]);
@@ -330,6 +375,7 @@
                 return image;
             };
 
+            cube_texture=get_texture("textures/dragon.png");
             floor_texture=get_texture("textures/granit.jpg");
 
             /*======================= RENDER TO TEXTURE ======================= */
@@ -362,15 +408,17 @@
         function webGLStart() {
             canvas = document.getElementById("trenchant_canvas");      
             initGL(canvas);   
-            initShader();
-            initFloor(); 
-            initMatrix();
-            initTexture();
+            //initShader();
+            //initDragon();
+            //initFloor(); 
+            //initMatrix();
+            //initTexture();
             car = new Trenchant.Car();
+            scene = new Scene();
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
-            gl.depthFunc(gl.LEQUAL);
-            gl.clearDepth(1.0);
+            //gl.depthFunc(gl.LEQUAL);
+            //gl.clearDepth(1.0);
 
             tick();
         }
