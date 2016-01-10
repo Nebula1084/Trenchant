@@ -99,8 +99,6 @@
             mat4.identity(mvScene);
             mat4.rotate(mvScene, degToRad(90), [0, 1, 0]);
             mat4.translate(mvScene, [0, -30, 0]);
-            //renderShadowMap();
-            //drawFloor();
             car.draw();
             scene.draw();
             gl.flush();
@@ -122,102 +120,6 @@
             }
             lastTime = timeNow;
 
-        }
-
-        var SHADER_PROGRAM_SHADOW, SHADER_PROGRAM;
-        var _positionShadow, _PmatrixShadow, _LmatrixShadow;
-        var PROJMATRIX_SHADOW, LIGHTMATRIX, MVMATRIX;
-        var FLOOR_VERTEX, FLOOR_INDICES;
-        var CUBE_VERTEX=false, CUBE_FACES=false, CUBE_NPOINTS=0;
-
-        var _uv, _position, _normal;
-        var _Pmatrix, _MVmatrix, _PmatrixLight, _Lmatrix;
-        var _mvMatrix, MVMATRIX;
-        var floor_texture, cube_texture;
-        var LIGHTDIR;
-        var fb, rb;
-
-        function renderShadowMap() {
-            gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-            gl.useProgram(SHADER_PROGRAM_SHADOW);
-            gl.enableVertexAttribArray(_positionShadow);
-
-            gl.viewport(0.0, 0.0, 512,512);
-            gl.clearColor(1.0, 0.0, 0.0, 1.0); //red -> Z=Zfar on the shadow map
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            gl.uniformMatrix4fv(_PmatrixShadow, false, PROJMATRIX_SHADOW);
-            gl.uniformMatrix4fv(_LmatrixShadow, false, LIGHTMATRIX);
-            gl.uniformMatrix4fv(_mvMatrix, false, MVMATRIX);
-            //car.drawShadow();
-            gl.bindBuffer(gl.ARRAY_BUFFER, CUBE_VERTEX);
-            gl.vertexAttribPointer(_positionShadow, 3, gl.FLOAT, false,4*(3+3+2),0) ;
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CUBE_FACES);
-            gl.drawElements(gl.TRIANGLES, CUBE_NPOINTS, gl.UNSIGNED_INT, 0);
-
-            gl.uniformMatrix4fv(_mvMatrix, false, MVMATRIX);
-
-            //DRAW THE FLOOR
-            gl.bindBuffer(gl.ARRAY_BUFFER, FLOOR_VERTEX);
-            gl.vertexAttribPointer(_positionShadow, 3, gl.FLOAT, false,4*(3+3+2),0) ;
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
-            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-
-            gl.disableVertexAttribArray(_positionShadow);
-        }
-
-        function drawFloor() {
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.useProgram(SHADER_PROGRAM);
-
-            gl.enableVertexAttribArray(_uv);
-            gl.enableVertexAttribArray(_position);
-            gl.enableVertexAttribArray(_normal);
-
-            gl.viewport(0.0, 0.0, canvas.width, canvas.height);
-            gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            gl.uniformMatrix4fv(_Pmatrix, false, pMatrix);
-            gl.uniformMatrix4fv(_MVmatrix, false, MVMATRIX);
-            gl.uniformMatrix4fv(_PmatrixLight, false, PROJMATRIX_SHADOW);
-            gl.uniformMatrix4fv(_Lmatrix, false, LIGHTMATRIX);
-
-            //DRAW THE DRAGON
-            if (cube_texture.webglTexture) {
-              gl.activeTexture(gl.TEXTURE1);
-              gl.bindTexture(gl.TEXTURE_2D, texture_rtt);
-              gl.activeTexture(gl.TEXTURE0);
-              gl.bindTexture(gl.TEXTURE_2D, cube_texture.webglTexture);
-            }
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, CUBE_VERTEX);
-            gl.vertexAttribPointer(_position, 3, gl.FLOAT, false,4*(3+3+2),0) ;
-            gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false,4*(3+3+2),3*4) ;
-            gl.vertexAttribPointer(_uv, 2, gl.FLOAT, false,4*(3+3+2),(3+3)*4) ;
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CUBE_FACES);
-            gl.drawElements(gl.TRIANGLES, CUBE_NPOINTS, gl.UNSIGNED_INT, 0);
-
-            gl.uniformMatrix4fv(_MVmatrix, false, MVMATRIX);
-
-            if (floor_texture.webglTexture) {
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, floor_texture.webglTexture);
-            }
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, FLOOR_VERTEX);
-            gl.vertexAttribPointer(_position, 3, gl.FLOAT, false,4*(3+3+2),0) ;
-            gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false,4*(3+3+2),3*4) ;
-            gl.vertexAttribPointer(_uv, 2, gl.FLOAT, false,4*(3+3+2),(3+3)*4) ;
-
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
-            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-
-            gl.disableVertexAttribArray(_uv);
-            gl.disableVertexAttribArray(_position);
-            gl.disableVertexAttribArray(_normal);
         }
 
         function tick() {
@@ -262,166 +164,14 @@
         }
 
 
-
-        function initShader() {
-            //BUILD SHADOW MAP SHADER PROGRAM
-            var shader_vertex_shadowMap=shader_vertex_source_shadowMap(gl); 
-            var shader_fragment_shadowMap=shader_fragment_source_shadowMap(gl);
-
-            SHADER_PROGRAM_SHADOW=gl.createProgram();
-            gl.attachShader(SHADER_PROGRAM_SHADOW, shader_vertex_shadowMap);
-            gl.attachShader(SHADER_PROGRAM_SHADOW, shader_fragment_shadowMap);
-
-            gl.linkProgram(SHADER_PROGRAM_SHADOW);
-            _PmatrixShadow = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "Pmatrix");
-            _LmatrixShadow = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "Lmatrix");
-            _positionShadow = gl.getAttribLocation(SHADER_PROGRAM_SHADOW, "position");
-            _mvMatrix = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "mvMatrix");
-
-            //BUILD DEFAULT RENDERING SHP
-            var shader_vertex=shader_vertex_source(gl);
-            var shader_fragment=shader_fragment_source(gl);
-
-            SHADER_PROGRAM=gl.createProgram();
-            gl.attachShader(SHADER_PROGRAM, shader_vertex);
-            gl.attachShader(SHADER_PROGRAM, shader_fragment);
-
-            gl.linkProgram(SHADER_PROGRAM);
-
-            _Pmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Pmatrix");
-            _MVmatrix = gl.getUniformLocation(SHADER_PROGRAM, "MVmatrix");
-            _Lmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Lmatrix");
-            _PmatrixLight = gl.getUniformLocation(SHADER_PROGRAM, "PmatrixLight");
-            _lightDirection = gl.getUniformLocation(SHADER_PROGRAM, "source_direction");
-            _sampler = gl.getUniformLocation(SHADER_PROGRAM, "uSampler");
-            _samplerShadowMap = gl.getUniformLocation(SHADER_PROGRAM, "samplerShadowMap");
-
-            _uv = gl.getAttribLocation(SHADER_PROGRAM, "uv");
-            _position = gl.getAttribLocation(SHADER_PROGRAM, "position");
-            _normal = gl.getAttribLocation(SHADER_PROGRAM, "normal");
-
-            gl.useProgram(SHADER_PROGRAM);
-            gl.uniform1i(_sampler, 0);
-            gl.uniform1i(_samplerShadowMap, 1);
-            LIGHTDIR=[0.58,0.58,-0.58];
-            gl.uniform3fv(_lightDirection, LIGHTDIR);
-        }
-
-        function initDragon() {
-            LIBS.get_json("textures/dragon.json", function(dragon){
-                //vertices
-                CUBE_VERTEX= gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, CUBE_VERTEX);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(dragon.vertices), gl.STATIC_DRAW);
-
-                //faces
-                CUBE_FACES=gl.createBuffer ();
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, CUBE_FACES);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(dragon.indices), gl.STATIC_DRAW);
-
-                CUBE_NPOINTS=dragon.indices.length;
-                tick();
-          });
-        }
-
-        function initFloor() {
-            var floor_vertices=[
-                -10,0,-10,   0,1,0,   0,0, //1st point position,normal and UV
-                -10,0, 10,   0,1,0,   0,1, //2nd point
-                10,0, 10,   0,1,0,   1,1,
-                10,0,-10,   0,1,0,   1,0
-            ];
-
-            FLOOR_VERTEX= gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, FLOOR_VERTEX);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_vertices), gl.STATIC_DRAW);
-
-            FLOOR_INDICES=gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2, 0,2,3]),gl.STATIC_DRAW);
-
-        }
-
-        function initMatrix() {
-            pMatrix=LIBS.get_projection(40, canvas.width/canvas.height, 1, 100);
-            MVMATRIX=LIBS.get_I4();
-
-            LIBS.translateZ(MVMATRIX, -20);
-            LIBS.translateY(MVMATRIX, -4);
-
-            PROJMATRIX_SHADOW=LIBS.get_projection_ortho(20, 1, 5, 28);
-            LIGHTMATRIX=LIBS.lookAtDir(LIGHTDIR, [0,1,0], [0,0,0]);
-        }
-
-        function initTexture() {
-            /*========================= TEXTURES ========================= */
-            var get_texture=function(image_URL){
-
-                var image=new Image();
-
-                image.src=image_URL;
-                image.webglTexture=false;
-
-                image.onload=function(e) {
-                  var texture=gl.createTexture();
-                  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                  gl.bindTexture(gl.TEXTURE_2D, texture);
-                  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-                  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                  gl.texParameteri(gl.TEXTURE_2D,
-                                   gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
-                  gl.generateMipmap(gl.TEXTURE_2D);
-                  gl.bindTexture(gl.TEXTURE_2D, null);
-                  image.webglTexture=texture;
-                };
-
-                return image;
-            };
-
-            //cube_texture=get_texture("textures/dragon.png");
-            floor_texture=get_texture("textures/granit.jpg");
-
-            /*======================= RENDER TO TEXTURE ======================= */
-
-            fb=gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-
-            rb=gl.createRenderbuffer();
-            gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
-            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16 , 512, 512);
-
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-                                     gl.RENDERBUFFER, rb);
-
-            texture_rtt=gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture_rtt);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512,
-                        0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-                                  gl.TEXTURE_2D, texture_rtt, 0);
-
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        }
-
-
         function webGLStart() {
             canvas = document.getElementById("trenchant_canvas");      
             initGL(canvas);   
-            //initShader();
-            //initDragon();
-            //initFloor(); 
-            //initMatrix();
-            //initTexture();
+
             car = new Trenchant.Car();
             scene = new Scene();
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
-            //gl.depthFunc(gl.LEQUAL);
-            //gl.clearDepth(1.0);
 
             tick();
         }
