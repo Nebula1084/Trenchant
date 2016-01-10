@@ -88,7 +88,6 @@
 
             mat4.identity(mvMatrix);
 
-
             mat4.translate(mvMatrix, [0, 0, -800]);
             mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
             mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
@@ -191,8 +190,16 @@
         }
 
         function tick() {
+            var wheel = mat4.create();
+            mat4.identity(wheel);
+
+            mat4.translate(wheel, [0, 200, -800]);
             requestAnimFrame(tick);
-            car.setAnimate(pMatrix, mvMatrix);
+            car.setBodyAnimate(pMatrix, mvMatrix);
+            car.setWheelRL(pMatrix, wheel);
+            car.setWheelRR(pMatrix, mvMatrix);
+            car.setWheelFL(pMatrix, mvMatrix);
+            car.setWheelFR(pMatrix, mvMatrix);
             drawScene();
             animate();        
         }

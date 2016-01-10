@@ -29,6 +29,14 @@ Trenchant.Object.prototype = {
 
         this.material.setMat(this.shaderProgram);
         this.animation.animate(this.shaderProgram);
+        
+        this.shaderProgram.eyeUniform = gl.getUniformLocation(this.shaderProgram, "uEye");
+        gl.uniform3f(
+            this.shaderProgram.eyeUniform,
+            Trenchant.eyePos[0],
+            Trenchant.eyePos[1],
+            Trenchant.eyePos[2]
+        );
 
         this.shaderProgram.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);
@@ -37,12 +45,7 @@ Trenchant.Object.prototype = {
         gl.enableVertexAttribArray(this.shaderProgram.vertexNormalAttribute);
 
         this.shaderProgram.textureCoordAttribute = gl.getAttribLocation(this.shaderProgram, "aTextureCoord");
-        gl.enableVertexAttribArray(this.shaderProgram.textureCoordAttribute);
-
-        this.shaderProgram.pMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uPMatrix");
-        this.shaderProgram.mvMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
-        this.shaderProgram.nMatrixUniform = gl.getUniformLocation(this.shaderProgram, "uNMatrix");
-
+        gl.enableVertexAttribArray(this.shaderProgram.textureCoordAttribute);        
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
         gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);

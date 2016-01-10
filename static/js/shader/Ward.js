@@ -6,12 +6,15 @@ Trenchant.Ward = function(gl){
 			varying vec2 vTextureCoord;\
 			varying vec3 vTransformedNormal;\
 			varying vec4 vPosition;\
+            varying vec3 vEyevec;\
 		\
 			uniform float uMaterialShininess;\
+            uniform float uReflectivity;\
 		\
 			uniform bool uShowSpecularHighlights;\
 			uniform bool uUseLighting;\
 			uniform bool uUseTextures;\
+            uniform bool uUseEnv;\
 		\
 			uniform vec3 uAmbientColor;\
             uniform float uAlapha;\
@@ -21,6 +24,7 @@ Trenchant.Ward = function(gl){
 			uniform vec3 uPointLightingDiffuseColor;\
 		\
 			uniform sampler2D uSampler;\
+            uniform samplerCube mapCube;\
 		\
 		\
 			void main(void) {\
@@ -32,7 +36,7 @@ Trenchant.Ward = function(gl){
 				} else {\
                     vec3 L = normalize(-uPointLightingLocation + vPosition.xyz);\
                     vec3 N = normalize(-vTransformedNormal);\
-                    vec3 E = normalize(vPosition.xyz);\
+                    vec3 E = normalize(vPosition.xyz-vEyevec);\
                     vec3 H = normalize(L + E);\
         \
                     float NH = dot(N, H);\
@@ -57,6 +61,13 @@ Trenchant.Ward = function(gl){
 				} else {\
 					fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);\
 				}\
+                vec4 envColor;\
+                float reflectivity;\
+                if (uUseEnv) {\
+                    reflectivity = uReflectivity;\
+                    envColor = textureCube(mapCube, reflect(normalize(-vEyevec), normalize(vTransformedNormal)));\
+                    fragmentColor = (1.0-reflectivity) * fragmentColor + reflectivity * envColor;\
+                }\
 				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, uAlapha);\
 			}\
     ";
