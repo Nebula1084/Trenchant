@@ -307,14 +307,14 @@ Trenchant.Car = function(){
     this.glass2.useLightingUniform = true;
     this.glass2.ambientColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
     this.glass2.pointLightingLocationUniform =  lightingLocation  //new Trenchant.Vector3(90, 90.0, -20.0);
-    this.glass2.pointLightingSpecularColorUniform = new Trenchant.Vector3(1, 1, 1);
+    this.glass2.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.85, 0.85, 0.85);
     this.glass2.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.7, 0.7, 0.7);
     this.glass2.useTexturesUniform = "none";
     this.glass2.samplerUniform  = 0;
     this.glass2.materialShininessUniform = 38;
-    this.glass2.alphaUniform = 0.2;
-    this.glass.reflectivityUniform  = 1.0;
-    this.glass.setEnvTexture(cube);
+    this.glass2.alphaUniform = 0.9;
+    this.glass2.reflectivityUniform  = 1.0;
+    this.glass2.setEnvTexture(cube);
     
 
     this.glass3 = new Trenchant.Material();
