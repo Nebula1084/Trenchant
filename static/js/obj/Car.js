@@ -83,7 +83,9 @@ Trenchant.Car = function(){
     this.wheel_fl = new Trenchant.Animate();
     this.wheel_fr = new Trenchant.Animate();
     
-    var lightingLocation = new Trenchant.Vector3(90, 90.0, 90.0);
+
+    var lightingLocation = new Trenchant.Vector3(90, 90.0, 200.0);
+
     
     this.M1 = new Trenchant.Material();
     this.M1.showSpecularHighlightsUniform = true;
@@ -102,7 +104,7 @@ Trenchant.Car = function(){
     this.carpaint.useLightingUniform = true;
     this.carpaint.setTexture("textures/red11.jpg");       
     this.carpaint.ambientColorUniform = new Trenchant.Vector3(0.4, 0.4, 0.4);
-    this.carpaint.pointLightingLocationUniform = lightingLocation  //new Trenchant.Vector3(0, 90.0, 20.0);
+    this.carpaint.pointLightingLocationUniform = new Trenchant.Vector3(0, 9000.0, 2000.0);
     this.carpaint.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.6, 0.6, 0.6);
     this.carpaint.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.5, 0.5, 0.5);
     this.carpaint.useTexturesUniform = "none";

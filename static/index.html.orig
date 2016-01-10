@@ -87,14 +87,20 @@
                 return;
 
             mat4.lookAt(Trenchant.eyePos, Trenchant.eyeLookat, [0.0, 1.0, 0.0], Trenchant.viewMatrix);
-            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 20000.0, pMatrix);
             mat4.multiply(pMatrix, Trenchant.viewMatrix, pMatrix);
 
             mat4.identity(mvMatrix);
 
+<<<<<<< HEAD
+            mat4.translate(mvMatrix, [0, 0, -10000]);
+            //mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
+            //mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+=======
             mat4.translate(mvMatrix, [0, 0, 0]);
             mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
             mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+>>>>>>> 12f9afa639ab836571c875970e33a585771c3c57
             
             //renderShadowMap();
             //drawFloor();
@@ -375,7 +381,7 @@
                 return image;
             };
 
-            //cube_texture=get_texture("textures/dragon.png");
+            cube_texture=get_texture("textures/dragon.png");
             floor_texture=get_texture("textures/granit.jpg");
 
             /*======================= RENDER TO TEXTURE ======================= */
