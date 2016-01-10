@@ -5,6 +5,7 @@ Trenchant.Cook_Torrance = function(gl){
 			varying vec2 vTextureCoord;\
 			varying vec3 vTransformedNormal;\
 			varying vec4 vPosition;\
+            varying vec3 vEyevec;\
 		\
 			uniform float uMaterialShininess;\
 		\
@@ -36,7 +37,7 @@ Trenchant.Cook_Torrance = function(gl){
 				} else {\
                     vec3 L = normalize(uPointLightingLocation - vPosition.xyz);\
                     vec3 N = normalize(vTransformedNormal);\
-                    vec3 E = normalize(vPosition.xyz);\
+                    vec3 E = normalize(vEyevec-vPosition.xyz);\
                     vec3 H = normalize(L + E);\
         \
                     float NH = dot(N, H);\
@@ -54,7 +55,7 @@ Trenchant.Cook_Torrance = function(gl){
                     float alpha=acos(NH);\
                     float D = Kc*exp(-pow(alpha/Km, 2.0));\
 					float diffuseLightWeighting = max(dot(N, L), 0.0);\
-                    float specularLightWeighting = F*D*G/NL/NE;\
+                    float specularLightWeighting = max(F*D*G/NL/NE, 0.0);\
 					lightWeighting = uAmbientColor\
                         + uPointLightingSpecularColor * specularLightWeighting\
 						+ uPointLightingDiffuseColor * diffuseLightWeighting;\
