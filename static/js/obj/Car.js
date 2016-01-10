@@ -343,5 +343,8 @@ Trenchant.Car.prototype = {
     },
     draw: function(){
         this.object3d.draw();
+    },
+    drawShadow: function() {
+        this.object3d.drawShadow();
     }
 };

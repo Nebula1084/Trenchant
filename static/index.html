@@ -1,12 +1,12 @@
 
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-		<script type="text/javascript" src="js/libs/webgl-utils.js"></script>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+        <script type="text/javascript" src="js/libs/webgl-utils.js"></script>
         <script type="text/javascript" src="js/libs/jquery.min.js"></script>
         <script type="text/javascript" src="js/libs/glMatrix-0.9.5.min.js"></script>
-		<script type="text/javascript" src="js/Trenchant.js"></script>
+        <script type="text/javascript" src="js/Trenchant.js"></script>
         <script type="text/javascript" src="js/obj/Object.js"></script>
         <script type="text/javascript" src="js/obj/Car.js"></script>
         <script type="text/javascript" src="js/obj/Animate.js"></script>
@@ -15,12 +15,19 @@
         <script type="text/javascript" src="js/shader/Cook_Torrance.js"></script>
         <script type="text/javascript" src="js/shader/Ward.js"></script>
         <script type="text/javascript" src="js/shader/VertexShader.js"></script>
-        <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>				
-		
-	<script type="text/javascript">
-	
-		var gl;
+        <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>
+        <script type="text/javascript" src="js/shadow/libs.js"></script>
+        <script type="text/javascript" src="js/shader/shader_vertex_source_shadowMap.js"></script>
+        <script type="text/javascript" src="js/shader/shader_fragment_source_shadowMap.js"></script>
+        <script type="text/javascript" src="js/shader/shader_vertex_source.js"></script>
+        <script type="text/javascript" src="js/shader/shader_fragment_source.js"></script>      
+        <script type="text/javascript" src="js/shadow/main.js"></script>        
+
+    <script type="text/javascript">
+    
+        var gl;
         var car;
+        var canvas;
         
         Trenchant.eyePos = [0.0, 0.0, 100.0];
         Trenchant.eyeLookat = [0.0, 0.0, -1000.0];
@@ -29,18 +36,18 @@
         document.addEventListener( 'mousemove', onDocumentMouseMove, false );
         document.onkeydown = onDocumentOnKeyDown;
         
-	
-		function initGL(canvas) {
-			try {
-				gl = canvas.getContext("experimental-webgl");
-				gl.viewportWidth = canvas.width;
-				gl.viewportHeight = canvas.height;
-			} catch (e) {
-			}
-			if (!gl) {
-				alert("Could not initialise WebGL, sorry :-(");
-			}
-		}
+    
+        function initGL(canvas) {
+            try {
+                gl = canvas.getContext("experimental-webgl");
+                gl.viewportWidth = canvas.width;
+                gl.viewportHeight = canvas.height;
+            } catch (e) {
+            }
+            if (!gl) {
+                alert("Could not initialise WebGL, sorry :-(");
+            }
+        }
                 
         var windowHalfX = window.innerWidth / 2;
         var windowHalfY = window.innerHeight / 2;
@@ -64,7 +71,7 @@
 
         function degToRad(degrees) {
             return degrees * Math.PI / 180;
-        }	
+        }   
         
         var teapotAngle = 180;
 
@@ -86,7 +93,10 @@
             mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
             mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
             
-            car.draw();           
+            renderShadowMap();
+            drawFloor();
+            car.draw();
+            gl.flush();
         }
 
 
@@ -107,6 +117,78 @@
 
         }
 
+        var SHADER_PROGRAM_SHADOW, SHADER_PROGRAM;
+        var _positionShadow, _PmatrixShadow, _LmatrixShadow;
+        var PROJMATRIX_SHADOW, LIGHTMATRIX;
+        var FLOOR_VERTEX, FLOOR_INDICES;
+
+        var _uv, _position, _normal;
+        var _Pmatrix, _Vmatrix, _Mmatrix, _PmatrixLight, _Lmatrix;
+        var VIEWMATRIX, MOVEMATRIX;
+        var floor_texture;
+        var LIGHTDIR;
+        var fb, rb;
+
+        function renderShadowMap() {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+            gl.useProgram(SHADER_PROGRAM_SHADOW);
+            gl.enableVertexAttribArray(_positionShadow);
+
+            gl.viewport(0.0, 0.0, 512,512);
+            gl.clearColor(1.0, 0.0, 0.0, 1.0); //red -> Z=Zfar on the shadow map
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            gl.uniformMatrix4fv(_PmatrixShadow, false, PROJMATRIX_SHADOW);
+            gl.uniformMatrix4fv(_LmatrixShadow, false, LIGHTMATRIX);
+
+            //DRAW THE FLOOR
+            gl.bindBuffer(gl.ARRAY_BUFFER, FLOOR_VERTEX);
+            gl.vertexAttribPointer(_positionShadow, 3, gl.FLOAT, false,4*(3+3+2),0) ;
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
+            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+
+            car.drawShadow();
+
+            gl.disableVertexAttribArray(_positionShadow);
+        }
+
+        function drawFloor() {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.useProgram(SHADER_PROGRAM);
+
+            gl.enableVertexAttribArray(_uv);
+            gl.enableVertexAttribArray(_position);
+            gl.enableVertexAttribArray(_normal);
+
+            gl.viewport(0.0, 0.0, canvas.width, canvas.height);
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.uniformMatrix4fv(_Pmatrix, false, pMatrix);
+            gl.uniformMatrix4fv(_Vmatrix, false, VIEWMATRIX);
+            gl.uniformMatrix4fv(_Mmatrix, false, MOVEMATRIX);
+            gl.uniformMatrix4fv(_PmatrixLight, false, PROJMATRIX_SHADOW);
+            gl.uniformMatrix4fv(_Lmatrix, false, LIGHTMATRIX);
+
+            if (floor_texture.webglTexture) {
+                gl.activeTexture(gl.TEXTURE1);
+                gl.bindTexture(gl.TEXTURE_2D, texture_rtt);
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, floor_texture.webglTexture);
+            }
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, FLOOR_VERTEX);
+            gl.vertexAttribPointer(_position, 3, gl.FLOAT, false,4*(3+3+2),0) ;
+            gl.vertexAttribPointer(_normal, 3, gl.FLOAT, false,4*(3+3+2),3*4) ;
+            gl.vertexAttribPointer(_uv, 2, gl.FLOAT, false,4*(3+3+2),(3+3)*4) ;
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
+            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+
+            gl.disableVertexAttribArray(_uv);
+            gl.disableVertexAttribArray(_position);
+            gl.disableVertexAttribArray(_normal);
+        }
 
         function tick() {
             requestAnimFrame(tick);
@@ -139,24 +221,160 @@
             }
         }
 
-        function webGLStart() {
-            var canvas = document.getElementById("trenchant_canvas");      
-            initGL(canvas);        
-            car = new Trenchant.Car();
 
+
+        function initShader() {
+            //BUILD SHADOW MAP SHADER PROGRAM
+            var shader_vertex_shadowMap=shader_vertex_source_shadowMap(gl); 
+            var shader_fragment_shadowMap=shader_fragment_source_shadowMap(gl);
+
+            SHADER_PROGRAM_SHADOW=gl.createProgram();
+            gl.attachShader(SHADER_PROGRAM_SHADOW, shader_vertex_shadowMap);
+            gl.attachShader(SHADER_PROGRAM_SHADOW, shader_fragment_shadowMap);
+
+            gl.linkProgram(SHADER_PROGRAM_SHADOW);
+            _PmatrixShadow = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "Pmatrix");
+            _LmatrixShadow = gl.getUniformLocation(SHADER_PROGRAM_SHADOW, "Lmatrix");
+            _positionShadow = gl.getAttribLocation(SHADER_PROGRAM_SHADOW, "position");
+
+
+            //BUILD DEFAULT RENDERING SHP
+            var shader_vertex=shader_vertex_source(gl);
+            var shader_fragment=shader_fragment_source(gl);
+
+            SHADER_PROGRAM=gl.createProgram();
+            gl.attachShader(SHADER_PROGRAM, shader_vertex);
+            gl.attachShader(SHADER_PROGRAM, shader_fragment);
+
+            gl.linkProgram(SHADER_PROGRAM);
+
+            _Pmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Pmatrix");
+            _Vmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Vmatrix");
+            _Mmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Mmatrix");
+            _Lmatrix = gl.getUniformLocation(SHADER_PROGRAM, "Lmatrix");
+            _PmatrixLight = gl.getUniformLocation(SHADER_PROGRAM, "PmatrixLight");
+            _lightDirection = gl.getUniformLocation(SHADER_PROGRAM, "source_direction");
+            _sampler = gl.getUniformLocation(SHADER_PROGRAM, "uSampler");
+            _samplerShadowMap = gl.getUniformLocation(SHADER_PROGRAM, "samplerShadowMap");
+
+            _uv = gl.getAttribLocation(SHADER_PROGRAM, "uv");
+            _position = gl.getAttribLocation(SHADER_PROGRAM, "position");
+            _normal = gl.getAttribLocation(SHADER_PROGRAM, "normal");
+
+            gl.useProgram(SHADER_PROGRAM);
+            gl.uniform1i(_sampler, 0);
+            gl.uniform1i(_samplerShadowMap, 1);
+            LIGHTDIR=[0.58,0.58,-10];
+            gl.uniform3fv(_lightDirection, LIGHTDIR);
+        }
+
+        function initFloor() {
+            var floor_vertices=[
+                -200,0,-200,   0,1,0,   0,0, //1st point position,normal and UV
+                -200,0, 200,   0,1,0,   0,1, //2nd point
+                200,0, 200,   0,1,0,   1,1,
+                200,0,-200,   0,1,0,   1,0
+            ];
+
+            FLOOR_VERTEX= gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, FLOOR_VERTEX);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floor_vertices), gl.STATIC_DRAW);
+
+            FLOOR_INDICES=gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0,1,2, 0,2,3]),gl.STATIC_DRAW);
+
+        }
+
+        function initMatrix() {
+            pMatrix=LIBS.get_projection(40, canvas.width/canvas.height, 1, 100);
+            MOVEMATRIX=LIBS.get_I4();
+            VIEWMATRIX=LIBS.get_I4();
+
+            LIBS.translateZ(VIEWMATRIX, -500);
+            LIBS.translateY(VIEWMATRIX, -100);
+
+            PROJMATRIX_SHADOW=LIBS.get_projection_ortho(20, 1, 5, 28);
+            LIGHTMATRIX=LIBS.lookAtDir(LIGHTDIR, [0,1,0], [0,0,0]);
+        }
+
+        function initTexture() {
+            /*========================= TEXTURES ========================= */
+            var get_texture=function(image_URL){
+
+                var image=new Image();
+
+                image.src=image_URL;
+                image.webglTexture=false;
+
+                image.onload=function(e) {
+                  var texture=gl.createTexture();
+                  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                  gl.bindTexture(gl.TEXTURE_2D, texture);
+                  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                  gl.texParameteri(gl.TEXTURE_2D,
+                                   gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR);
+                  gl.generateMipmap(gl.TEXTURE_2D);
+                  gl.bindTexture(gl.TEXTURE_2D, null);
+                  image.webglTexture=texture;
+                };
+
+                return image;
+            };
+
+            floor_texture=get_texture("textures/granit.jpg");
+
+            /*======================= RENDER TO TEXTURE ======================= */
+
+            fb=gl.createFramebuffer();
+            gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+            rb=gl.createRenderbuffer();
+            gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16 , 512, 512);
+
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+                                     gl.RENDERBUFFER, rb);
+
+            texture_rtt=gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture_rtt);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512,
+                        0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                                  gl.TEXTURE_2D, texture_rtt, 0);
+
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        }
+
+
+        function webGLStart() {
+            canvas = document.getElementById("trenchant_canvas");      
+            initGL(canvas);   
+            initShader();
+            initFloor(); 
+            initMatrix();
+            initTexture();
+            car = new Trenchant.Car();
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
-            
+            gl.depthFunc(gl.LEQUAL);
+            gl.clearDepth(1.0);
+
             tick();
         }
-	
-	</script>
-	</head>
-	
-	<body onload="webGLStart();">
-		
-		<canvas id="trenchant_canvas" style="border: none;" width="1400" height="700"></canvas>
+    
+    </script>
+    </head>
+    
+    <body onload="webGLStart();">
+        
+        <canvas id="trenchant_canvas" style="border: none;" width="1400" height="700"></canvas>
 
-	</body>
+    </body>
 
 </html>

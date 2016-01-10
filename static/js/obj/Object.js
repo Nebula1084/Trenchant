@@ -26,7 +26,7 @@ Trenchant.Object.prototype = {
 	constructor: Trenchant.Object,
 	draw: function(){
         gl.useProgram(this.shaderProgram);
-        
+
         this.material.setMat(this.shaderProgram);
         this.animation.animate(this.shaderProgram);
 
@@ -52,6 +52,12 @@ Trenchant.Object.prototype = {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
         gl.vertexAttribPointer(this.shaderProgram.vertexNormalAttribute, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+        gl.drawArrays(gl.TRIANGLES, 0, this.vertexNormalBuffer.numItems); 
+	},
+	drawShadow: function() {
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
+        gl.vertexAttribPointer(_positionShadow, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.drawArrays(gl.TRIANGLES, 0, this.vertexNormalBuffer.numItems); 
 	}
@@ -80,6 +86,19 @@ Trenchant.Object3D.prototype = {
                 this.obj_dict[this.drawSequence[key]].draw();
             }   
         }        
+	},
+	drawShadow: function() {
+		if (this.drawSequence==undefined){
+            this.obj_dict["HDM_04_10_glass"].draw();
+            for (var key in this.obj_dict){
+                if (key!="HDM_04_10_glass")
+                this.obj_dict[key].drawShadow();
+            }
+        } else {
+            for (var key in this.drawSequence){
+                this.obj_dict[this.drawSequence[key]].drawShadow();
+            }   
+        }    
 	}
 };
 
