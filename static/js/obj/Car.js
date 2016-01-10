@@ -53,13 +53,13 @@ Trenchant.Car = function(){
         "HDM_04_10_brake_caliper_2_fr",  //
         "HDM_04_10_brake_disc_3_fr",  //
         "HDM_04_10_rim_rr",       //  
-        "HDM_04_10_glass",
-        "HDM_04_10_glass_orange",
-        "HDM_04_10_glass_ms",
-        "HDM_04_10_glass_black",
-        "HDM_04_10_glass_red_ms",
-        "HDM_04_10_register_plate",
-        "HDM_04_10_taillight_glass"
+        "HDM_04_10_glass",     //车窗大玻璃
+        "HDM_04_10_glass_orange",    //小玻璃，忽略
+        "HDM_04_10_glass_ms",      //车前灯玻璃
+        "HDM_04_10_glass_black",     //车玻璃边线
+        "HDM_04_10_glass_red_ms",    //车后灯玻璃
+        "HDM_04_10_register_plate",   //车牌
+        "HDM_04_10_taillight_glass"   //后车灯玻璃
     ]
 
        
@@ -83,7 +83,7 @@ Trenchant.Car = function(){
     this.wheel_fl = new Trenchant.Animate();
     this.wheel_fr = new Trenchant.Animate();
     
-    var lightingLocation = new Trenchant.Vector3(90, 90.0, -20.0);
+    var lightingLocation = new Trenchant.Vector3(90, 90.0, 90.0);
     
     this.M1 = new Trenchant.Material();
     this.M1.showSpecularHighlightsUniform = true;
@@ -301,6 +301,21 @@ Trenchant.Car = function(){
     this.glass1.samplerUniform  = 0;
     this.glass1.materialShininessUniform = 38;
     this.glass1.alphaUniform = 0.2;
+    
+    this.glass2 = new Trenchant.Material();
+    this.glass2.showSpecularHighlightsUniform = true;
+    this.glass2.useLightingUniform = true;
+    this.glass2.ambientColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
+    this.glass2.pointLightingLocationUniform =  lightingLocation  //new Trenchant.Vector3(90, 90.0, -20.0);
+    this.glass2.pointLightingSpecularColorUniform = new Trenchant.Vector3(1, 1, 1);
+    this.glass2.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.7, 0.7, 0.7);
+    this.glass2.useTexturesUniform = "none";
+    this.glass2.samplerUniform  = 0;
+    this.glass2.materialShininessUniform = 38;
+    this.glass2.alphaUniform = 0.2;
+    this.glass.reflectivityUniform  = 1.0;
+    this.glass.setEnvTexture(cube);
+    
 
     this.glass3 = new Trenchant.Material();
     this.glass3.showSpecularHighlightsUniform = true;
@@ -369,21 +384,21 @@ Trenchant.Car = function(){
        scope.object3d.obj_dict["HDM_04_10_carpaint"].shaderProgram = scope.WardMesh;
        scope.object3d.obj_dict["HDM_04_10_carpaint"].material = scope.carpaint;
        
- //    scope.object3d.obj_dict["HDM_04_10_glass_red_ms"].material = scope.M0;
+       scope.object3d.obj_dict["HDM_04_10_glass"].material = scope.M0;
       
        
-  
+        scope.object3d.obj_dict["HDM_04_10_mirrors"].material = scope.glass2;
         scope.object3d.obj_dict["HDM_04_10_glass_orange"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_glass_orange"].material = scope.glass;
         scope.object3d.obj_dict["HDM_04_10_glass_ms"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_glass_ms"].material = scope.glass1;    //前车灯玻璃
         scope.object3d.obj_dict["HDM_04_10_glass_black"].shaderProgram = scope.PhongMesh;
-        scope.object3d.obj_dict["HDM_04_10_glass_black"].material = scope.dark;
+        scope.object3d.obj_dict["HDM_04_10_glass_black"].material = scope.dark;    //车玻璃边线
         scope.object3d.obj_dict["HDM_04_10_glass"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_glass"].material = scope.glass;
         scope.object3d.obj_dict["HDM_04_10_glass_red_ms"].material = scope.glass3;       //车后灯玻璃外 
         scope.object3d.obj_dict["HDM_04_10_taillight_glass"].material = scope.glass3;  //后车灯玻璃
-        scope.object3d.obj_dict["HDM_04_10_register_plate"].material = scope.glass;        
+        scope.object3d.obj_dict["HDM_04_10_register_plate"].material = scope.carpaint;      //车后牌  
         scope.object3d.obj_dict["HDM_04_10_tire_fl"].material = scope.M3;
         //scope.object3d.obj_dict["HDM_04_10_tire_fl"].shaderProgram = scope.PhongMesh;
         scope.object3d.obj_dict["HDM_04_10_tire_fr"].material = scope.M3;
@@ -395,7 +410,7 @@ Trenchant.Car = function(){
         scope.object3d.obj_dict["HDM_04_10_rim_fl"].material = scope.tire;
         scope.object3d.obj_dict["HDM_04_10_rim_fr"].material = scope.tire;
         scope.object3d.obj_dict["HDM_04_10_interior_red_ms"].shaderProgram = scope.TorranceMesh;
-        scope.object3d.obj_dict["HDM_04_10_interior_red_ms"].material = scope.sit;
+        scope.object3d.obj_dict["HDM_04_10_interior_red_ms"].material = scope.sit;    //车内饰
         
         scope.object3d.obj_dict["HDM_04_10_brake_disc_fl"].material = scope.tire1;  
         scope.object3d.obj_dict["HDM_04_10_brake_disc_fr"].material = scope.tire1;
