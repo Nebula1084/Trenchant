@@ -30,7 +30,7 @@ Scene = function(){
 
     var scope = this;
         
-    loader.load("obj/The City.obj", function(objects){
+    loader.load("obj/bridge.obj", function(objects){
         scope.object3d=new Trenchant.Object3D(objects);        
         scope.object3d.drawSequence=scope.drawSequence;
         
