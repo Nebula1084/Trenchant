@@ -71,27 +71,3 @@ Trenchant.PhongShader = function(gl){
     
     return shader;
 };
-
-Trenchant.Cube_Frag = function(gl){
-    var str = "\
-        precision mediump float;\
-        \
-        varying vec2 vTextureCoord;\
-        varying vec3 vTransformedNormal;\
-        varying vec3 vEyevec;\
-        uniform float uAlapha;\
-        \
-        uniform sampler2D uSampler;\
-        uniform samplerCube mapCube;\
-        void main( void )\
-        {\
-            vec4 fragmentColor = textureCube(mapCube, reflect(normalize(-vEyevec), normalize(vTransformedNormal)));\
-            gl_FragColor = vec4(fragmentColor.rgb, uAlapha);\
-        }";
-
-    var shader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(shader, str);
-    gl.compileShader(shader);
-    
-    return shader;
-};

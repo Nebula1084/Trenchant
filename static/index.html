@@ -93,8 +93,8 @@
             mat4.identity(mvMatrix);
 
             mat4.translate(mvMatrix, [0, 0, -800]);
-            mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
-            mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+            //mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
+            //mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
             
             //renderShadowMap();
             //drawFloor();
@@ -231,7 +231,7 @@
 
             scene.setBodyAnimate(pMatrix, mvMatrix);
             drawScene();
-            animate();        
+            animate();
         }
         
         function onDocumentMouseMove( event ) {
