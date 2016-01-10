@@ -54,6 +54,7 @@
         var windowHalfX = window.innerWidth / 2;
         var windowHalfY = window.innerHeight / 2;
         var mvMatrix = mat4.create();
+        var mvScene = mat4.create();
         var mvMatrixStack = [];
         var pMatrix = mat4.create();
         var viewMatrix = mat4.create();
@@ -87,15 +88,17 @@
                 return;
 
             mat4.lookAt(Trenchant.eyePos, Trenchant.eyeLookat, [0.0, 1.0, 0.0], Trenchant.viewMatrix);
-            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1200.0, pMatrix);
             mat4.multiply(pMatrix, Trenchant.viewMatrix, pMatrix);
 
             mat4.identity(mvMatrix);
-
-            mat4.translate(mvMatrix, [0, 0, 0]);
-            mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
-            mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+            mat4.translate(mvMatrix, [12, -4, 150]);
+            //mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
+            //mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
             
+            mat4.identity(mvScene);
+            mat4.rotate(mvScene, degToRad(90), [0, 1, 0]);
+            mat4.translate(mvScene, [0, -30, 0]);
             //renderShadowMap();
             //drawFloor();
             car.draw();
@@ -229,7 +232,7 @@
             car.setWheelFL(pMatrix, mvMatrix);
             car.setWheelFR(pMatrix, mvMatrix);
 
-            scene.setBodyAnimate(pMatrix, mvMatrix);
+            scene.setBodyAnimate(pMatrix, mvScene);
             drawScene();
             animate();
         }
