@@ -270,13 +270,13 @@
             if (currentlyPressedKeys[87])
             {
                 vec3.normalize(Trenchant.eyeLookat, d);
-                vec3.scale(d, 3, d);
+                vec3.scale(d, 1.05, d);
                 vec3.add(Trenchant.eyePos, d, Trenchant.eyePos);
             }
             if (currentlyPressedKeys[83])
             {
                 vec3.normalize(Trenchant.eyeLookat, d);
-                vec3.scale(d, 3, d);
+                vec3.scale(d, 1.05, d);
                 vec3.subtract(Trenchant.eyePos, d, Trenchant.eyePos);
             }
         }
@@ -395,9 +395,10 @@
 
             var mx = ( event.clientX - windowHalfX );
             var my = ( event.clientY - windowHalfY );
+            var r =1.15;
             
-            Trenchant.eyeLookat[0]=mx;
-            Trenchant.eyeLookat[1]=my;
+            Trenchant.eyeLookat[0]=mx*r;
+            Trenchant.eyeLookat[1]=my*r;
                         
 
         }
