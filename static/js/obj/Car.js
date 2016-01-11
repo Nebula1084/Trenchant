@@ -83,7 +83,7 @@ Trenchant.Car = function(){
     this.wheel_fl = new Trenchant.Animate();
     this.wheel_fr = new Trenchant.Animate();
     
-    var lightingLocation = new Trenchant.Vector3(90, 90.0, -20.0);
+    var lightingLocation = new Trenchant.Vector3(90, 90.0, 200.0);
     
     this.M1 = new Trenchant.Material();
     this.M1.showSpecularHighlightsUniform = true;
@@ -316,7 +316,7 @@ Trenchant.Car = function(){
 
     var scope = this;
         
-    loader.load("obj/car.obj", function(objects){
+    loader.load("obj/car3.obj", function(objects){
         scope.object3d=new Trenchant.Object3D(objects);        
         scope.object3d.drawSequence=scope.drawSequence;
         

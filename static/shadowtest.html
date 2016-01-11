@@ -137,7 +137,7 @@
 
             mat4.identity(mvMatrix);
 
-            mat4.translate(mvMatrix, [0, 0, -800]);
+            mat4.translate(mvMatrix, [0, 0, 0]);
             mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
             mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
             object3d.draw();
@@ -213,7 +213,7 @@
             am.mvMatrix = mvMatrix;              
             
             var loader = new Trenchant.OBJLoader();
-            loader.load("obj/tt.obj", function(objects){
+            loader.load("obj/bridge2.obj", function(objects){
                 object3d=new Trenchant.Object3D(objects);                        
                 
                 for (var key in object3d.obj_dict){

@@ -36,7 +36,7 @@ Trenchant.Ward = function(gl){
 				} else {\
                     vec3 L = normalize(-uPointLightingLocation + vPosition.xyz);\
                     vec3 N = normalize(-vTransformedNormal);\
-                    vec3 E = normalize(vPosition.xyz-vEyevec);\
+                    vec3 E = normalize(vEyevec-vPosition.xyz);\
                     vec3 H = normalize(L + E);\
         \
                     float NH = dot(N, H);\
@@ -47,8 +47,10 @@ Trenchant.Ward = function(gl){
                     float gamma = acos(NH);\
                     \
 					float diffuseLightWeighting = max(dot(N, L), 0.0);\
-                    float ward=exp(-pow(tan(gamma)/omega, 2.0))*sqrt(NL/NE)/4.0/pow(gamma,2.0);\
-                    float specularLightWeighting = ward;\
+                    float ward=0.0;\
+                    if(NE!=0.0 && gamma!=0.0)\
+                        ward=exp(-pow(tan(gamma)/omega, 2.0))*sqrt(NL/NE)/4.0/pow(gamma,2.0);\
+                    float specularLightWeighting = max(ward, 0.0);\
 					lightWeighting = uAmbientColor\
                         + uPointLightingSpecularColor * specularLightWeighting\
 						+ uPointLightingDiffuseColor * diffuseLightWeighting;\

@@ -29,7 +29,7 @@
         var car;
         var canvas;
         
-        Trenchant.eyePos = [0.0, 0.0, 100.0];
+        Trenchant.eyePos = [0.0, 0.0, 10.0];
         Trenchant.eyeLookat = [0.0, 0.0, -1000.0];
         Trenchant.viewMatrix = mat4.create();
         
@@ -88,7 +88,7 @@
 
             mat4.identity(mvMatrix);
 
-            mat4.translate(mvMatrix, [0, 0, -800]);
+            mat4.translate(mvMatrix, [0, 0, 0]);
             mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
             mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
             
