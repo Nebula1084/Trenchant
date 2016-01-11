@@ -31,7 +31,9 @@
         var scene;
         var canvas;
         
-        Trenchant.eyePos = [24, 2.4, 170.0];
+
+        Trenchant.eyePos = [24.0, 2.4, 170.0];
+
         Trenchant.eyeLookat = [0.0, 0.0, -1000.0];
         Trenchant.viewMatrix = mat4.create();
         
@@ -116,8 +118,15 @@
         var rotate_degree = 0;
         var car_height = -5.6;
         
+        function adjusteye(){
+            // Trenchant.eyePos[0]=x_car_pos-10;
+            // Trenchant.eyePos[1]=y_car_pos-1;
+            // Trenchant.eyePos[2]=z_car_pos-1;
+        }
+        
         function handleKeys() {
             if (currentlyPressedKeys[38]) {		
+                adjusteye();
                 //speed up 			
                 speedAcceleration = 0.1+ Math.abs(speed)*0.1; // notice!!	
                 // speedAcceleration = 0.1+ speed*0.1; //error	
@@ -136,6 +145,7 @@
             }
             
             if (currentlyPressedKeys[40]) {
+                adjusteye();
                 //speed up (in reverse)
                 speedAcceleration = 0.1+ Math.abs(speed)*0.1;
                 speed -= speedAcceleration;
@@ -319,12 +329,13 @@
         var pos_control3 = 82/50;
         
         function tick() {
+            // console.log(Trenchant.eyePos);
             var wheel = mat4.create();
             mat4.identity(wheel);
             var wheel1 = mat4.create();
             var wheel2 = mat4.create();
             var wheel3 = mat4.create();
-            var wheel4 = mat4.create();
+            var wheel4 = mat4.create();            
             
             mat4.identity(wheel1);
             mat4.identity(wheel2);
@@ -387,6 +398,7 @@
             
             Trenchant.eyeLookat[0]=mx;
             Trenchant.eyeLookat[1]=my;
+                        
 
         }
 
