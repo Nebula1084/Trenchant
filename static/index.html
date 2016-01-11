@@ -218,10 +218,11 @@
             }
             skyTexture.back.image.src = "textures/skyCube/" + skyTexture.id + "/back.jpg";
         }
-
+        var skyMatrix=mat4.create();
+        mat4.identity(skyMatrix);
         function setMatrixUniforms() {
             gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, skyMatrix);
         }
 
         var worldVertexPositionBuffer = null;
@@ -534,13 +535,13 @@
             if (currentlyPressedKeys[87])
             {
                 vec3.normalize(Trenchant.eyeLookat, d);
-                vec3.scale(d, 3, d);
+                vec3.scale(d, 1.05, d);
                 vec3.add(Trenchant.eyePos, d, Trenchant.eyePos);
             }
             if (currentlyPressedKeys[83])
             {
                 vec3.normalize(Trenchant.eyeLookat, d);
-                vec3.scale(d, 3, d);
+                vec3.scale(d, 1.05, d);
                 vec3.subtract(Trenchant.eyePos, d, Trenchant.eyePos);
             }
         }
@@ -651,7 +652,7 @@
             mat4.translate(wheel1, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel1, degToRad(-rotation), [0,1,0]);
             mat4.translate(wheel1, [-pos_control3,-pos_control2,pos_control]);
-            mat4.rotate(wheel1, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel1, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel1, [pos_control3,pos_control2,-pos_control]);
 
             mat4.translate(wheel3, [12,car_height,150]);
@@ -660,7 +661,7 @@
             mat4.translate(wheel3, [0,0,-302.42/50]);
             mat4.translate(wheel3, [-pos_control3,-pos_control2,pos_control]);
             mat4.rotate(wheel3, degToRad(-steering*130), [0,1,0]);
-            mat4.rotate(wheel3, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel3, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel3, [pos_control3,pos_control2,-pos_control]);
             mat4.translate(wheel3, [0,0,302.42/50]);
 
@@ -668,7 +669,7 @@
             mat4.translate(wheel2, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel2, degToRad(-rotation), [0,1,0]);
             mat4.translate(wheel2, [pos_control3,-pos_control2,pos_control]);
-            mat4.rotate(wheel2, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel2, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel2, [-pos_control3,pos_control2,-pos_control]);
 
             mat4.translate(wheel4, [12,car_height,150]);
@@ -677,7 +678,7 @@
             mat4.translate(wheel4, [0,0,-302.42/50]);
             mat4.translate(wheel4, [pos_control3,-pos_control2,pos_control]);
             mat4.rotate(wheel4, degToRad(-steering*130), [0,1,0]);
-            mat4.rotate(wheel4, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel4, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel4, [-pos_control3,pos_control2,-pos_control]);
             mat4.translate(wheel4, [0,0,302.42/50]);
 
@@ -700,9 +701,17 @@
 
             var mx = ( event.clientX - windowHalfX );
             var my = ( event.clientY - windowHalfY );
+// <<<<<<< HEAD
+//             var r =1.15;
+            
+//             Trenchant.eyeLookat[0]=mx*r;
+//             Trenchant.eyeLookat[1]=my*r;
+// =======
 
             Trenchant.eyeLookat[0]=mx;
             Trenchant.eyeLookat[1]=my;
+// >>>>>>> f83849a8f72c49d1992187b2873a60d1e8a9155a
+                        
 
 
         }
