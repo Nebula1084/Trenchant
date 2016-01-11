@@ -218,10 +218,11 @@
             }
             skyTexture.back.image.src = "textures/skyCube/" + skyTexture.id + "/back.jpg";
         }
-
+        var skyMatrix=mat4.create();
+        mat4.identity(skyMatrix);
         function setMatrixUniforms() {
             gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, skyMatrix);
         }
 
         var worldVertexPositionBuffer = null;
@@ -648,7 +649,7 @@
             mat4.translate(wheel1, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel1, degToRad(-rotation), [0,1,0]);
             mat4.translate(wheel1, [-pos_control3,-pos_control2,pos_control]);
-            mat4.rotate(wheel1, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel1, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel1, [pos_control3,pos_control2,-pos_control]);
 
             mat4.translate(wheel3, [12,car_height,150]);
@@ -657,7 +658,7 @@
             mat4.translate(wheel3, [0,0,-302.42/50]);
             mat4.translate(wheel3, [-pos_control3,-pos_control2,pos_control]);
             mat4.rotate(wheel3, degToRad(-steering*130), [0,1,0]);
-            mat4.rotate(wheel3, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel3, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel3, [pos_control3,pos_control2,-pos_control]);
             mat4.translate(wheel3, [0,0,302.42/50]);
 
@@ -665,7 +666,7 @@
             mat4.translate(wheel2, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel2, degToRad(-rotation), [0,1,0]);
             mat4.translate(wheel2, [pos_control3,-pos_control2,pos_control]);
-            mat4.rotate(wheel2, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel2, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel2, [-pos_control3,pos_control2,-pos_control]);
 
             mat4.translate(wheel4, [12,car_height,150]);
@@ -674,7 +675,7 @@
             mat4.translate(wheel4, [0,0,-302.42/50]);
             mat4.translate(wheel4, [pos_control3,-pos_control2,pos_control]);
             mat4.rotate(wheel4, degToRad(-steering*130), [0,1,0]);
-            mat4.rotate(wheel4, degToRad(rotate_degree), [1,0,0]);
+            mat4.rotate(wheel4, degToRad(-rotate_degree), [1,0,0]);
             mat4.translate(wheel4, [-pos_control3,pos_control2,-pos_control]);
             mat4.translate(wheel4, [0,0,302.42/50]);
 
