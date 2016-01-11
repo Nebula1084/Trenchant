@@ -128,7 +128,7 @@
             if (currentlyPressedKeys[38]) {		
                 adjusteye();
                 //speed up 			
-                speedAcceleration = 0.1+ Math.abs(speed)*0.1; // notice!!	
+                speedAcceleration = 0.1+ Math.abs(speed)*0.01; // notice!!	
                 // speedAcceleration = 0.1+ speed*0.1; //error	
                 speed += speedAcceleration; 					
                 //check if above speedMax 					
@@ -147,7 +147,7 @@
             if (currentlyPressedKeys[40]) {
                 adjusteye();
                 //speed up (in reverse)
-                speedAcceleration = 0.1+ Math.abs(speed)*0.1;
+                speedAcceleration = 0.1+ Math.abs(speed)*0.01;
                 speed -= speedAcceleration;
                 //check if above speedMaxReverse
                 if (speed < speedMaxReverse) 					
