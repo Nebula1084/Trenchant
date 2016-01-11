@@ -68,11 +68,15 @@ Trenchant.Car = function(){
         gl.attachShader(program, frag);
         gl.attachShader(program, vetx);
         gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            alert("Could not initialise shaders");
+        }
         return program;
     }
     this.WardMesh = createProgram(Trenchant.Ward(gl), Trenchant.VertexShader(gl));   
     this.PhongMesh = createProgram(Trenchant.PhongShader(gl), Trenchant.VertexShader(gl));
     this.TorranceMesh = createProgram(Trenchant.Cook_Torrance(gl), Trenchant.VertexShader(gl));
+    this.EnvMesh = createProgram(Trenchant.Cube_Frag(gl), Trenchant.VertexShader(gl));
     
     this.am = new Trenchant.Animate();
     this.wheel_rl = new Trenchant.Animate();
@@ -80,9 +84,7 @@ Trenchant.Car = function(){
     this.wheel_fl = new Trenchant.Animate();
     this.wheel_fr = new Trenchant.Animate();
     
-    if (!gl.getProgramParameter(this.WardMesh, gl.LINK_STATUS)) {
-            alert("Could not initialise shaders");
-    }
+
     
     this.M1 = new Trenchant.Material();
     this.M1.showSpecularHighlightsUniform = true;
@@ -107,8 +109,15 @@ Trenchant.Car = function(){
     this.carpaint.useTexturesUniform = "none";
     this.carpaint.samplerUniform  = 0;
     this.carpaint.materialShininessUniform = 32.0;
-
-
+    var cube = [
+        "textures/posx.jpg",
+        "textures/negx.jpg",
+        "textures/posy.jpg",
+        "textures/negy.jpg",
+        "textures/posz.jpg",
+        "textures/negz.jpg",
+    ];
+    this.carpaint.setEnvTexture(cube);
     
     this.tire = new Trenchant.Material();
     this.tire.showSpecularHighlightsUniform = false;
@@ -282,7 +291,8 @@ Trenchant.Car = function(){
     this.glass.useTexturesUniform = "none";
     this.glass.samplerUniform  = 0;
     this.glass.materialShininessUniform = 38;
-    this.glass.alphaUniform = 0.2;
+    this.glass.alphaUniform = 0.9;
+    this.glass.setEnvTexture(cube);
     var scope = this;
         
     loader.load("obj/car.obj", function(objects){

@@ -6,15 +6,16 @@ Trenchant.Ward = function(gl){
 			varying vec2 vTextureCoord;\
 			varying vec3 vTransformedNormal;\
 			varying vec4 vPosition;\
+            varying vec3 vEyevec;\
 		\
 			uniform float uMaterialShininess;\
 		\
 			uniform bool uShowSpecularHighlights;\
 			uniform bool uUseLighting;\
 			uniform bool uUseTextures;\
+            uniform bool uUseEnv;\
 		\
 			uniform vec3 uAmbientColor;\
-            uniform vec3 uEyeLocation;\
             uniform float uAlapha;\
 		\
 			uniform vec3 uPointLightingLocation;\
@@ -22,6 +23,7 @@ Trenchant.Ward = function(gl){
 			uniform vec3 uPointLightingDiffuseColor;\
 		\
 			uniform sampler2D uSampler;\
+            uniform samplerCube mapCube;\
 		\
 		\
 			void main(void) {\
@@ -33,7 +35,7 @@ Trenchant.Ward = function(gl){
 				} else {\
                     vec3 L = normalize(-uPointLightingLocation + vPosition.xyz);\
                     vec3 N = normalize(-vTransformedNormal);\
-                    vec3 E = normalize(vPosition.xyz);\
+                    vec3 E = normalize(vPosition.xyz-vEyevec);\
                     vec3 H = normalize(L + E);\
         \
                     float NH = dot(N, H);\
