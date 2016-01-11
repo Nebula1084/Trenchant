@@ -21,23 +21,284 @@
         <script type="text/javascript" src="js/shader/shader_vertex_source_shadowMap.js"></script>
         <script type="text/javascript" src="js/shader/shader_fragment_source_shadowMap.js"></script>
         <script type="text/javascript" src="js/shader/shader_vertex_source.js"></script>
-        <script type="text/javascript" src="js/shader/shader_fragment_source.js"></script>      
-        <script type="text/javascript" src="js/shadow/main.js"></script>        
+        <script type="text/javascript" src="js/shader/shader_fragment_source.js"></script>
+        <script type="text/javascript" src="js/shadow/main.js"></script>
+
+        <script id="fs" type="x-shader/x-fragment">
+			precision mediump float;
+
+			varying vec2 vTextureCoord;
+
+			uniform sampler2D uSampler;
+
+			void main(void) {
+				gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+			}
+		</script>
+
+		<script id="vs" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+			attribute vec2 aTextureCoord;
+
+			uniform mat4 uMVMatrix;
+			uniform mat4 uPMatrix;
+
+			varying vec2 vTextureCoord;
+
+			void main(void) {
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+				vTextureCoord = aTextureCoord;
+			}
+		</script>
 
     <script type="text/javascript">
-    
+
         var gl;
         var car;
         var scene;
         var canvas;
-        
+
         Trenchant.eyePos = [0.0, 0.0, 100.0];
         Trenchant.eyeLookat = [0.0, 0.0, -1000.0];
         Trenchant.viewMatrix = mat4.create();
-        
+
         document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-        
-    
+
+        function getShader(gl, id) {
+            var shaderScript = document.getElementById(id);
+            if (!shaderScript) {
+                return null;
+            }
+
+            var str = "";
+            var k = shaderScript.firstChild;
+            while (k) {
+                if (k.nodeType == 3) {
+                    str += k.textContent;
+                }
+                k = k.nextSibling;
+            }
+
+            var shader;
+            if (shaderScript.type == "x-shader/x-fragment") {
+                shader = gl.createShader(gl.FRAGMENT_SHADER);
+            } else if (shaderScript.type == "x-shader/x-vertex") {
+                shader = gl.createShader(gl.VERTEX_SHADER);
+            } else {
+                return null;
+            }
+
+            gl.shaderSource(shader, str);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                alert(gl.getShaderInfoLog(shader));
+                return null;
+            }
+
+            return shader;
+        }
+
+        var shaderProgram;
+
+
+        function handleLoadedTexture(texture, type) {
+    		switch (type) {
+    			case 0:
+    				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    				gl.bindTexture(gl.TEXTURE_2D, texture);
+    				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+    				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    				//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    				gl.generateMipmap(gl.TEXTURE_2D);
+
+    				gl.bindTexture(gl.TEXTURE_2D, null);
+    				break;
+    			case 1:
+    				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    				gl.bindTexture(gl.TEXTURE_2D, texture);
+    				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+    				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    				gl.bindTexture(gl.TEXTURE_2D, null);
+    				break;
+    		}
+
+        }
+
+
+        function initShaders() {
+            var fragmentShader = getShader(gl, "fs");
+            var vertexShader = getShader(gl, "vs");
+
+            shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vertexShader);
+            gl.attachShader(shaderProgram, fragmentShader);
+            gl.linkProgram(shaderProgram);
+
+            if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+                alert("Could not initialise shaders");
+            }
+
+            gl.useProgram(shaderProgram);
+
+            shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+            gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+            shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
+
+            shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+            shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+            shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+        }
+
+    	var skyTexture;
+
+        var _UP = 0;
+        var _DOWN = 1;
+        var _LEFT = 2;
+        var _RIGHT = 3;
+        var _FRONT = 4;
+        var _BACK = 5;
+
+
+        function initTexture() {
+            skyTexture = new Object();
+            skyTexture.id = 0;
+
+            // type 3
+            skyTexture.up = gl.createTexture();
+            skyTexture.up.image = new Image();
+            skyTexture.up.image.onload = function() {
+                handleLoadedTexture(skyTexture.up, 1);
+            }
+            skyTexture.up.image.src = "textures/skyCube/" + skyTexture.id + "/up.jpg";
+
+            // type 4
+            skyTexture.down = gl.createTexture();
+            skyTexture.down.image = new Image();
+            skyTexture.down.image.onload = function() {
+                handleLoadedTexture(skyTexture.down, 1);
+            }
+            skyTexture.down.image.src = "textures/skyCube/" + skyTexture.id + "/down.jpg";
+
+            // type 5
+            skyTexture.left = gl.createTexture();
+            skyTexture.left.image = new Image();
+            skyTexture.left.image.onload = function() {
+                handleLoadedTexture(skyTexture.left, 1);
+            }
+            skyTexture.left.image.src = "textures/skyCube/" + skyTexture.id + "/left.jpg";
+
+            // type 6
+            skyTexture.right = gl.createTexture();
+            skyTexture.right.image = new Image();
+            skyTexture.right.image.onload = function() {
+                handleLoadedTexture(skyTexture.right, 1);
+            }
+            skyTexture.right.image.src = "textures/skyCube/" + skyTexture.id + "/right.jpg";
+
+            // type 7
+            skyTexture.front = gl.createTexture();
+            skyTexture.front.image = new Image();
+            skyTexture.front.image.onload = function() {
+                handleLoadedTexture(skyTexture.front, 1);
+            }
+            skyTexture.front.image.src = "textures/skyCube/" + skyTexture.id + "/front.jpg";
+
+            // type 8
+            skyTexture.back = gl.createTexture();
+            skyTexture.back.image = new Image();
+            skyTexture.back.image.onload = function() {
+                handleLoadedTexture(skyTexture.back, 1);
+            }
+            skyTexture.back.image.src = "textures/skyCube/" + skyTexture.id + "/back.jpg";
+        }
+
+        function setMatrixUniforms() {
+            gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+        }
+
+        var worldVertexPositionBuffer = null;
+    	var worldVertexTextureCoordBuffer = null;
+
+    	function handleLoadedWorld(data) {
+    		var vertexCount = [];
+    		var vertexPositions = [];
+    		var vertexTextureCoords = [];
+
+    		var skyCube = new Object();
+    		skyCube.x = 500;
+    		skyCube.y = 500;
+    		skyCube.z = 500;
+
+    		for (var i = 0; i < 6; i++) {
+    			vertexCount[i] = 0;
+    			vertexPositions[i] = [];
+    			vertexTextureCoords[i] = [];
+    		}
+
+    		var triangleOrder = [1, 0, 3, 1, 2, 3];
+
+    		var obj = JSON.parse(data);
+    		var init = obj.init;
+    		var skyCubeVertexPosition = obj.skyCubeVertexPosition;
+    		var skyCubeTriangleOrider = [];
+    		skyCubeTriangleOrider[_UP] = obj.skyCubeTriangleOrider.up;
+    		skyCubeTriangleOrider[_DOWN] = obj.skyCubeTriangleOrider.down;
+    		skyCubeTriangleOrider[_LEFT] = obj.skyCubeTriangleOrider.left;
+    		skyCubeTriangleOrider[_RIGHT] = obj.skyCubeTriangleOrider.right;
+    		skyCubeTriangleOrider[_FRONT] = obj.skyCubeTriangleOrider.front;
+    		skyCubeTriangleOrider[_BACK] = obj.skyCubeTriangleOrider.back;
+
+    		for (var i=0; i<6; i++) {
+    			for (var k in skyCubeTriangleOrider[i]) {
+    				var order = skyCubeTriangleOrider[i][k];
+    				var _order = triangleOrder[k];
+
+    				vertexPositions[i].push(skyCubeVertexPosition[order].x * skyCube.x);
+    				vertexPositions[i].push(skyCubeVertexPosition[order].y * skyCube.y);
+    				vertexPositions[i].push(skyCubeVertexPosition[order].z * skyCube.z);
+
+    				vertexTextureCoords[i].push(init[_order].s);
+    				vertexTextureCoords[i].push(init[_order].t);
+
+    				vertexCount[i]++;
+    			}
+    		}
+
+    		worldVertexPositionBuffer = [];
+    		worldVertexTextureCoordBuffer = [];
+    		for (var i = 0; i < 6; i++) {
+    			worldVertexPositionBuffer[i] = gl.createBuffer();
+    			gl.bindBuffer(gl.ARRAY_BUFFER, worldVertexPositionBuffer[i]);
+    			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions[i]), gl.STATIC_DRAW);
+    			worldVertexPositionBuffer[i].itemSize = 3;
+    			worldVertexPositionBuffer[i].numItems = vertexCount[i];
+
+    	        worldVertexTextureCoordBuffer[i] = gl.createBuffer();
+    	        gl.bindBuffer(gl.ARRAY_BUFFER, worldVertexTextureCoordBuffer[i]);
+    	        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexTextureCoords[i]), gl.STATIC_DRAW);
+    	        worldVertexTextureCoordBuffer[i].itemSize = 2;
+    	        worldVertexTextureCoordBuffer[i].numItems = vertexCount[i];
+    		}
+    	}
+
+        function loadWorld() {
+        var request = new XMLHttpRequest();
+        request.open("GET", "data/world.json");
+        request.onreadystatechange = function() {
+            if (request.readyState == 4) {
+                handleLoadedWorld(request.responseText);
+            }
+        }
+
+        request.send();
+        }
+
         function initGL(canvas) {
             try {
                 gl = canvas.getContext("experimental-webgl");
@@ -49,7 +310,7 @@
                 alert("Could not initialise WebGL, sorry :-(");
             }
         }
-                
+
         var windowHalfX = window.innerWidth / 2;
         var windowHalfY = window.innerHeight / 2;
         var mvMatrix = mat4.create();
@@ -73,10 +334,10 @@
 
         function degToRad(degrees) {
             return degrees * Math.PI / 180;
-        }   
-        
+        }
+
         var currentlyPressedKeys = {};
-        
+
         function handleKeyDown(event) {
             currentlyPressedKeys[event.keyCode] = true;
         }
@@ -85,20 +346,20 @@
         function handleKeyUp(event) {
             currentlyPressedKeys[event.keyCode] = false;
         }
-        
+
         var z_shift = 0;
         var x_shift = 0;
         var y_shift = 0;
-        
+
         var x_car_shift = 0;
         var x_car_pos = 0;
         var y_car_shift = 0;
         var y_car_pos = 0;
         var z_car_shift = 0;
         var z_car_pos = 0;
-        
+
         var enableBirdEyeMode = false;
-        
+
         var speed = 0;
         var speedMax = 30;
         var speedMaxReverse = -20;
@@ -115,47 +376,47 @@
         var flag=false;
         var rotate_degree = 0;
         var car_height = -5.6;
-        
+
         function handleKeys() {
-            if (currentlyPressedKeys[38]) {		
-                //speed up 			
-                speedAcceleration = 0.1+ Math.abs(speed)*0.1; // notice!!	
-                // speedAcceleration = 0.1+ speed*0.1; //error	
-                speed += speedAcceleration; 					
-                //check if above speedMax 					
+            if (currentlyPressedKeys[38]) {
+                //speed up
+                speedAcceleration = 0.1+ Math.abs(speed)*0.1; // notice!!
+                // speedAcceleration = 0.1+ speed*0.1; //error
+                speed += speedAcceleration;
+                //check if above speedMax
                 if (speed > speedMax)
                 {
                     //reset to speedMax
                     speed = speedMax;
                 }
-                
+
                 if (Math.abs(steering)>0.03 && speed>(speedMax/2))
                 {
                     speed = speedMax/2;
                 }
             }
-            
+
             if (currentlyPressedKeys[40]) {
                 //speed up (in reverse)
                 speedAcceleration = 0.1+ Math.abs(speed)*0.1;
                 speed -= speedAcceleration;
                 //check if above speedMaxReverse
-                if (speed < speedMaxReverse) 					
-                { 						
-                    //reset to speedMaxReverse 						
-                    speed = speedMaxReverse; 					
-                } 		
-                
+                if (speed < speedMaxReverse)
+                {
+                    //reset to speedMaxReverse
+                    speed = speedMaxReverse;
+                }
+
                 if (Math.abs(steering)>0.03 && speed<(speedMaxReverse/2))
                 {
                     speed = speedMaxReverse/2;
-                }		 
+                }
             }
-            
+
             if (currentlyPressedKeys[32]) { //space bar   brake
-                speed *= speedDeceleration;				 
+                speed *= speedDeceleration;
             }
-            
+
             if (currentlyPressedKeys[37]) {
                 //turn left
                 steering -= steeringAcceleration;
@@ -166,7 +427,7 @@
                     steering = -steeringMax;
                 }
             }
-            
+
             if (currentlyPressedKeys[39]) {
                 //turn right
                 steering += steeringAcceleration;
@@ -176,27 +437,27 @@
                     //reset to steeringMax
                     steering = steeringMax;
                 }
-            }     
-            
-            //engine 
-            // friction	 			
-            speed *= groundFriction; 	
-                
-            // prevent drift 			
-            if(speed > 0 && speed < 0.05) 			
-            { 				
-                speed = 0 			
-            } 	
-            
-            // calculate velocity based on speed 			
-            velocityX = Math.sin (rotation * Math.PI / 180) * speed; 			
+            }
+
+            //engine
+            // friction
+            speed *= groundFriction;
+
+            // prevent drift
+            if(speed > 0 && speed < 0.05)
+            {
+                speed = 0
+            }
+
+            // calculate velocity based on speed
+            velocityX = Math.sin (rotation * Math.PI / 180) * speed;
             velocityY = Math.cos (rotation * Math.PI / 180) * speed;
 
-            // update position	 			
-            x_car_pos += velocityX/50; 			
+            // update position
+            x_car_pos += velocityX/50;
             z_car_pos -= velocityY/50;
-            
-            // prevent steering drift (right) 			
+
+            // prevent steering drift (right)
             if(steering > 0)
             {
                 // check if steering value is really low, set to 0
@@ -207,9 +468,9 @@
             }
 
             // prevent steering drift (left)
-            else if(steering < 0) 			
+            else if(steering < 0)
             {
-                // check if steering value is really low, set to 0 				
+                // check if steering value is really low, set to 0
                 if(steering > -0.01)
                 {
                     steering = 0;
@@ -223,8 +484,8 @@
             rotation += steering * speed;
             rotate_degree += speed*0.8;
             //engine finished
-            
-            
+
+
              if (currentlyPressedKeys[73]) { //i
                 z_car_shift = -0.1/50;
             } else
@@ -232,7 +493,7 @@
                 z_car_shift = 0.1/50;
             } else
             z_car_shift = 0;
-            
+
             if (currentlyPressedKeys[74]) { //j
                 x_car_shift = -0.1/50;
             } else
@@ -247,16 +508,16 @@
                 y_car_shift = -0.1/50;
             } else
             y_car_shift = 0;
-            
+
             if (currentlyPressedKeys[67]) { //c
                 pos_control += -0.01;
             }
             if (currentlyPressedKeys[68]) { //d
                 pos_control += 0.01;
             }
-            
-            var d = [0, 0, 0]     
-            
+
+            var d = [0, 0, 0]
+
             if (currentlyPressedKeys[87])
             {
                 vec3.normalize(Trenchant.eyeLookat, d);
@@ -271,7 +532,7 @@
             }
         }
 
-        function drawScene() {        
+        function drawScene() {
             gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -281,7 +542,7 @@
                 return;
 
             mat4.lookAt(Trenchant.eyePos, Trenchant.eyeLookat, [0.0, 1.0, 0.0], Trenchant.viewMatrix);
-            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1200.0, pMatrix);
+            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 12000.0, pMatrix);
             mat4.multiply(pMatrix, Trenchant.viewMatrix, pMatrix);
 
             mat4.identity(mvMatrix);
@@ -290,13 +551,54 @@
             mat4.rotate(mvMatrix, degToRad(-rotation), [0,1,0]);
             //mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
             //mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
-            
+
             mat4.identity(mvScene);
             mat4.rotate(mvScene, degToRad(90), [0, 1, 0]);
             mat4.translate(mvScene, [0, -30, 0]);
+            drawSkycube();
             car.draw();
             scene.draw();
             gl.flush();
+        }
+
+        function drawSkycube() {
+            gl.useProgram(shaderProgram);
+            if (worldVertexTextureCoordBuffer == null || worldVertexPositionBuffer == null) {
+		        return;
+		    }
+            gl.activeTexture(gl.TEXTURE0);
+        	for (var i = 0; i < 6; i++) {
+        		switch (i) {
+        			case _UP:
+        				gl.bindTexture(gl.TEXTURE_2D, skyTexture.up);
+        				break;
+        			case _DOWN:
+        				gl.bindTexture(gl.TEXTURE_2D, skyTexture.down);
+        				break;
+        			case _LEFT:
+        				gl.bindTexture(gl.TEXTURE_2D, skyTexture.left);
+        				break;
+        			case _RIGHT:
+        				gl.bindTexture(gl.TEXTURE_2D, skyTexture.right);
+        				break;
+        			case _FRONT:
+        				gl.bindTexture(gl.TEXTURE_2D, skyTexture.front);
+        				break;
+        			case _BACK:
+        				gl.bindTexture(gl.TEXTURE_2D, skyTexture.back);
+        				break;
+
+        		}
+        		gl.uniform1i(shaderProgram.samplerUniform, 0);
+        		gl.bindBuffer(gl.ARRAY_BUFFER, worldVertexTextureCoordBuffer[i]);
+        		gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, worldVertexTextureCoordBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+
+        		gl.bindBuffer(gl.ARRAY_BUFFER, worldVertexPositionBuffer[i]);
+        		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, worldVertexPositionBuffer[i].itemSize, gl.FLOAT, false, 0, 0);
+
+                setMatrixUniforms();
+        		gl.drawArrays(gl.TRIANGLES, 0, worldVertexPositionBuffer[i].numItems);
+        	}
         }
 
 
@@ -313,11 +615,11 @@
             lastTime = timeNow;
 
         }
-        
+
         var pos_control = 140.59/50;
         var pos_control2 = -35.29/50;
         var pos_control3 = 82/50;
-        
+
         function tick() {
             var wheel = mat4.create();
             mat4.identity(wheel);
@@ -325,19 +627,19 @@
             var wheel2 = mat4.create();
             var wheel3 = mat4.create();
             var wheel4 = mat4.create();
-            
+
             mat4.identity(wheel1);
             mat4.identity(wheel2);
             mat4.identity(wheel3);
             mat4.identity(wheel4);
-            
+
             mat4.translate(wheel1, [12,car_height,150]);
             mat4.translate(wheel1, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel1, degToRad(-rotation), [0,1,0]);
             mat4.translate(wheel1, [-pos_control3,-pos_control2,pos_control]);
             mat4.rotate(wheel1, degToRad(rotate_degree), [1,0,0]);
             mat4.translate(wheel1, [pos_control3,pos_control2,-pos_control]);
-            
+
             mat4.translate(wheel3, [12,car_height,150]);
             mat4.translate(wheel3, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel3, degToRad(-rotation), [0,1,0]);
@@ -347,14 +649,14 @@
             mat4.rotate(wheel3, degToRad(rotate_degree), [1,0,0]);
             mat4.translate(wheel3, [pos_control3,pos_control2,-pos_control]);
             mat4.translate(wheel3, [0,0,302.42/50]);
-            
+
             mat4.translate(wheel2, [12,car_height,150]);
             mat4.translate(wheel2, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel2, degToRad(-rotation), [0,1,0]);
             mat4.translate(wheel2, [pos_control3,-pos_control2,pos_control]);
             mat4.rotate(wheel2, degToRad(rotate_degree), [1,0,0]);
             mat4.translate(wheel2, [-pos_control3,pos_control2,-pos_control]);
-            
+
             mat4.translate(wheel4, [12,car_height,150]);
             mat4.translate(wheel4, [x_car_pos, y_car_pos, z_car_pos]);
             mat4.rotate(wheel4, degToRad(-rotation), [0,1,0]);
@@ -364,8 +666,8 @@
             mat4.rotate(wheel4, degToRad(rotate_degree), [1,0,0]);
             mat4.translate(wheel4, [-pos_control3,pos_control2,-pos_control]);
             mat4.translate(wheel4, [0,0,302.42/50]);
-            
-            
+
+
             requestAnimFrame(tick);
             car.setBodyAnimate(pMatrix, mvMatrix);
             car.setWheelRL(pMatrix, wheel1);
@@ -379,35 +681,38 @@
             animate();
             myFunction();
         }
-        
+
         function onDocumentMouseMove( event ) {
 
             var mx = ( event.clientX - windowHalfX );
             var my = ( event.clientY - windowHalfY );
-            
+
             Trenchant.eyeLookat[0]=mx;
             Trenchant.eyeLookat[1]=my;
 
         }
 
         function webGLStart() {
-            canvas = document.getElementById("trenchant_canvas");      
-            initGL(canvas);   
+            canvas = document.getElementById("trenchant_canvas");
+            initGL(canvas);
+            initShaders();
+            initTexture();
+            loadWorld();
 
             car = new Trenchant.Car();
             scene = new Scene();
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
-             document.onkeydown = handleKeyDown;
+            document.onkeydown = handleKeyDown;
             document.onkeyup = handleKeyUp;
             tick();
         }
-    
+
     </script>
     </head>
-    
+
     <body onload="webGLStart();">
-        
+
         <canvas id="trenchant_canvas" style="border: none;" width="1400" height="700"></canvas>
         <input type="text" id="show_speed"> speed</br>
         <input type="text" id="show_steer"> steering </br>
