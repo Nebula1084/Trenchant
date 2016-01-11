@@ -10,6 +10,7 @@ Trenchant.Material = function(){
     this.useTexturesUniform = "none";
     this.samplerUniform  = 0;
     this.materialShininessUniform = 0;
+    this.reflectivityUniform = 0;
     this.alphaUniform = 1.0;
 };
 
@@ -19,6 +20,7 @@ Trenchant.Material.prototype = {
         shader.samplerUniform = gl.getUniformLocation(shader, "uSampler");
         shader.mapCubeUniform = gl.getUniformLocation(shader, "mapCube");
         shader.materialShininessUniform = gl.getUniformLocation(shader, "uMaterialShininess");
+        shader.reflectivityUniform = gl.getUniformLocation(shader, "uReflectivity");
         shader.showSpecularHighlightsUniform = gl.getUniformLocation(shader, "uShowSpecularHighlights");
         shader.useTexturesUniform = gl.getUniformLocation(shader, "uUseTextures");
         shader.useEnvUniform = gl.getUniformLocation(shader, "uUseEnv");
@@ -87,7 +89,8 @@ Trenchant.Material.prototype = {
                 gl.uniform1i(shader.mapCubeUniform, 1);
             }
                         
-            gl.uniform1f(shader.materialShininessUniform, this.materialShininessUniform);            
+            gl.uniform1f(shader.materialShininessUniform, this.materialShininessUniform);
+            gl.uniform1f(shader.reflectivityUniform, this.reflectivityUniform);            
         }
     },
     setTexture: function(src){

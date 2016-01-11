@@ -9,6 +9,7 @@ Trenchant.Ward = function(gl){
             varying vec3 vEyevec;\
 		\
 			uniform float uMaterialShininess;\
+            uniform float uReflectivity;\
 		\
 			uniform bool uShowSpecularHighlights;\
 			uniform bool uUseLighting;\
@@ -60,6 +61,13 @@ Trenchant.Ward = function(gl){
 				} else {\
 					fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);\
 				}\
+                vec4 envColor;\
+                float reflectivity;\
+                if (uUseEnv) {\
+                    reflectivity = uReflectivity;\
+                    envColor = textureCube(mapCube, reflect(normalize(-vEyevec), normalize(vTransformedNormal)));\
+                    fragmentColor = (1.0-reflectivity) * fragmentColor + reflectivity * envColor;\
+                }\
 				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, uAlapha);\
 			}\
     ";

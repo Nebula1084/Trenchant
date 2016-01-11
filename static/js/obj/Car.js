@@ -108,6 +108,7 @@ Trenchant.Car = function(){
     this.carpaint.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.3, 0.05, 0.05);
     this.carpaint.useTexturesUniform = "none";
     this.carpaint.samplerUniform  = 0;
+    this.carpaint.reflectivityUniform  = 0.5;
     this.carpaint.materialShininessUniform = 32.0;
     var cube = [
         "textures/posx.jpg",
@@ -292,6 +293,7 @@ Trenchant.Car = function(){
     this.glass.samplerUniform  = 0;
     this.glass.materialShininessUniform = 38;
     this.glass.alphaUniform = 0.9;
+    this.glass.reflectivityUniform  = 0.9;
     this.glass.setEnvTexture(cube);
     var scope = this;
         

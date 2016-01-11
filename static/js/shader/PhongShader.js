@@ -8,6 +8,7 @@ Trenchant.PhongShader = function(gl){
             varying vec3 vEyevec;\
 		\
 			uniform float uMaterialShininess;\
+            uniform float uReflectivity;\
 		\
 			uniform bool uShowSpecularHighlights;\
 			uniform bool uUseLighting;\
@@ -50,12 +51,16 @@ Trenchant.PhongShader = function(gl){
 				vec4 fragmentColor;\
 				if (uUseTextures) {\
 					fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));\
+				} else {\
+					fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);\
 				}\
+                vec4 envColor;\
+                float reflectivity;\
                 if (uUseEnv) {\
-                    fragmentColor = textureCube(mapCube, reflect(normalize(-vEyevec), normalize(vTransformedNormal)));\
-                }else {\
-					fragmentColor = vec4(0.0, 0.0, 1.0, 1.0);\
-				}\
+                    reflectivity = uReflectivity;\
+                    envColor = textureCube(mapCube, reflect(normalize(-vEyevec), normalize(vTransformedNormal)));\
+                    fragmentColor = (1.0-reflectivity) * fragmentColor + reflectivity * envColor;\
+                }\
 				gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, uAlapha);\
 			}\
     ";
