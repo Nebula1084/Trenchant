@@ -76,7 +76,6 @@ Trenchant.Car = function(){
     this.WardMesh = createProgram(Trenchant.Ward(gl), Trenchant.VertexShader(gl));   
     this.PhongMesh = createProgram(Trenchant.PhongShader(gl), Trenchant.VertexShader(gl));
     this.TorranceMesh = createProgram(Trenchant.Cook_Torrance(gl), Trenchant.VertexShader(gl));
-    this.EnvMesh = createProgram(Trenchant.Cube_Frag(gl), Trenchant.VertexShader(gl));
     
     this.am = new Trenchant.Animate();
     this.wheel_rl = new Trenchant.Animate();

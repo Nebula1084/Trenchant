@@ -1,3 +1,4 @@
 *.obj
 *.mtl
 *.json
+*.DS_*
