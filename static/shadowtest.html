@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+        <script type="text/javascript" src="js/libs/webgl-utils.js"></script>
+        <script type="text/javascript" src="js/libs/jquery.min.js"></script>
+        <script type="text/javascript" src="js/libs/glMatrix-0.9.5.min.js"></script>
+        <script type="text/javascript" src="js/Trenchant.js"></script>
+        <script type="text/javascript" src="js/obj/Object.js"></script>
+        <script type="text/javascript" src="js/obj/Car.js"></script>
+        <script type="text/javascript" src="js/obj/Animate.js"></script>
+        <script type="text/javascript" src="js/obj/Material.js"></script>
+        <script type="text/javascript" src="js/shader/PhongShader.js"></script>
+        <script type="text/javascript" src="js/shader/Cook_Torrance.js"></script>
+        <script type="text/javascript" src="js/shader/Ward.js"></script>
+        <script type="text/javascript" src="js/shader/VertexShader.js"></script>
+        <script type="text/javascript" src="js/loaders/OBJLoader.js"></script>
+        <script type="text/javascript" src="js/shadow/libs.js"></script>
+        <script type="text/javascript" src="js/shader/shader_vertex_source_shadowMap.js"></script>
+        <script type="text/javascript" src="js/shader/shader_fragment_source_shadowMap.js"></script>
+        <script type="text/javascript" src="js/shader/shader_vertex_source.js"></script>
+        <script type="text/javascript" src="js/shader/shader_fragment_source.js"></script>      
+        <script type="text/javascript" src="js/shadow/main.js"></script>        
+
+    <script type="text/javascript">
+    
+        var gl;
+        var car;
+        var canvas;
+        
+        Trenchant.eyePos = [0.0, 0.0, 100.0];
+        Trenchant.eyeLookat = [0.0, 0.0, -1000.0];
+        Trenchant.viewMatrix = mat4.create();
+        
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        document.onkeydown = onDocumentOnKeyDown;
+        
+    
+        function initGL(canvas) {
+            try {
+                gl = canvas.getContext("experimental-webgl");
+                gl.viewportWidth = canvas.width;
+                gl.viewportHeight = canvas.height;
+            } catch (e) {
+            }
+            if (!gl) {
+                alert("Could not initialise WebGL, sorry :-(");
+            }
+        }
+                
+        var windowHalfX = window.innerWidth / 2;
+        var windowHalfY = window.innerHeight / 2;
+        var mvMatrix = mat4.create();
+        var mvMatrixStack = [];
+        var pMatrix = mat4.create();
+        var viewMatrix = mat4.create();
+        var object3d;
+
+        function mvPushMatrix() {
+            var copy = mat4.create();
+            mat4.set(mvMatrix, copy);
+            mvMatrixStack.push(copy);
+        }
+
+        function mvPopMatrix() {
+            if (mvMatrixStack.length == 0) {
+                throw "Invalid popMatrix!";
+            }
+            mvMatrix = mvMatrixStack.pop();
+        }
+
+        function degToRad(degrees) {
+            return degrees * Math.PI / 180;
+        }   
+        
+        var teapotAngle = 180;
+        var lastTime = 0;
+        
+        function animate() {
+            var timeNow = new Date().getTime();
+            if (lastTime != 0) {
+                var elapsed = timeNow - lastTime;
+
+
+      
+         // teapotAngle = 180;
+
+                teapotAngle += 0.05 * elapsed;
+            }
+            lastTime = timeNow;
+
+        }
+        
+        function initFloor(){
+            var floor_vertices=[
+                -10,0,-10,   0,1,0,   0,0, //1st point position,normal and UV
+                -10,0, 10,   0,1,0,   0,1, //2nd point
+                10,0, 10,   0,1,0,   1,1,
+                10,0,-10,   0,1,0,   1,0
+            ];
+
+            var FLOOR_VERTEX= GL.createBuffer ();
+            GL.bindBuffer(GL.ARRAY_BUFFER, FLOOR_VERTEX);
+            GL.bufferData(GL.ARRAY_BUFFER, new Float32Array(floor_vertices), GL.STATIC_DRAW);
+
+            var FLOOR_INDICES=GL.createBuffer ();
+            GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
+            GL.bufferData(GL.ELEMENT_ARRAY_BUFFER,
+                            new Uint16Array([0,1,2, 0,2,3]),GL.STATIC_DRAW);
+        }
+        
+        function drawFloor(){
+            if (floor_texture.webglTexture) {
+                GL.bindTexture(GL.TEXTURE_2D, floor_texture.webglTexture);
+            }
+
+            GL.bindBuffer(GL.ARRAY_BUFFER, FLOOR_VERTEX);
+            GL.vertexAttribPointer(_position, 3, GL.FLOAT, false,4*(3+3+2),0) ;
+            GL.vertexAttribPointer(_normal, 3, GL.FLOAT, false,4*(3+3+2),3*4) ;
+            GL.vertexAttribPointer(_uv, 2, GL.FLOAT, false,4*(3+3+2),(3+3)*4) ;
+
+            GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, FLOOR_INDICES);
+            GL.drawElements(GL.TRIANGLES, 6, GL.UNSIGNED_SHORT, 0);
+        }
+
+        function drawScene() {        
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            if (object3d==null)
+                return;
+
+            mat4.lookAt(Trenchant.eyePos, Trenchant.eyeLookat, [0.0, 1.0, 0.0], Trenchant.viewMatrix);
+            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+            mat4.multiply(pMatrix, Trenchant.viewMatrix, pMatrix);
+
+            mat4.identity(mvMatrix);
+
+            mat4.translate(mvMatrix, [0, 0, -800]);
+            mat4.rotate(mvMatrix, degToRad(23.4), [1, 0, -1]);
+            mat4.rotate(mvMatrix, degToRad(teapotAngle), [0, 1, 0]);
+            object3d.draw();
+            gl.flush();
+        }
+
+        function tick() {
+            requestAnimFrame(tick);
+            // car.setBodyAnimate(pMatrix, mvMatrix);
+            
+            drawScene();
+            animate();
+        }
+        
+        function onDocumentMouseMove( event ) {
+
+            var mx = ( event.clientX - windowHalfX );
+            var my = ( event.clientY - windowHalfY );
+            
+            Trenchant.eyeLookat[0]=mx;
+            Trenchant.eyeLookat[1]=my;
+
+        }
+        
+        function onDocumentOnKeyDown( event ){
+            var d = [0, 0, 0]            
+            vec3.normalize(Trenchant.eyeLookat, d);
+            vec3.scale(d, 5, d);
+            switch(event.keyCode) {
+                case 87:
+                    vec3.add(Trenchant.eyePos, d, Trenchant.eyePos);                    
+                break;
+                case 83:
+                    vec3.subtract(Trenchant.eyePos, d, Trenchant.eyePos);
+                break;
+            }
+        }
+
+
+        function webGLStart() {
+            canvas = document.getElementById("trenchant_canvas");      
+            initGL(canvas);
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+            gl.depthFunc(gl.LEQUAL);
+            gl.clearDepth(1.0);
+            
+            function createProgram(frag, vetx){
+                var program = gl.createProgram();
+                gl.attachShader(program, frag);
+                gl.attachShader(program, vetx);
+                gl.linkProgram(program);
+                if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    alert("Could not initialise shaders");
+                }
+                return program;
+            }
+            
+            var prg = createProgram(Trenchant.PhongShader(gl), Trenchant.VertexShader(gl));
+            var M1 = new Trenchant.Material();
+            M1.showSpecularHighlightsUniform = true;
+            M1.useLightingUniform = true;
+            M1.ambientColorUniform = new Trenchant.Vector3(0.2, 0.2, 0.2);
+            M1.pointLightingLocationUniform = new Trenchant.Vector3(90, 90.0, -20.0);
+            M1.pointLightingSpecularColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.1);
+            M1.pointLightingDiffuseColorUniform = new Trenchant.Vector3(0.8, 0.8, 0.8);
+            M1.useTexturesUniform = "none";
+            M1.samplerUniform  = 0;
+            M1.materialShininessUniform = 32.0;
+            var am = new Trenchant.Animate();
+            
+            am.pMatrix = pMatrix;
+            am.mvMatrix = mvMatrix;              
+            
+            var loader = new Trenchant.OBJLoader();
+            loader.load("obj/tt.obj", function(objects){
+                object3d=new Trenchant.Object3D(objects);                        
+                
+                for (var key in object3d.obj_dict){
+                    object3d.obj_dict[key].shaderProgram=prg;
+                    object3d.obj_dict[key].material = M1;
+                    object3d.obj_dict[key].animation = am;
+                    console.log("part: "+key);
+                }
+            });
+
+            tick();
+        }
+    
+    </script>
+    </head>
+    
+    <body onload="webGLStart();">
+        
+        <canvas id="trenchant_canvas" style="border: none;" width="1400" height="700"></canvas>
+
+    </body>
+
+</html>

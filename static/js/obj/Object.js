@@ -79,9 +79,7 @@ Trenchant.Object3D.prototype = {
 	constructor: Trenchant.Object3D,
 	draw: function(){
         if (this.drawSequence==undefined){
-            this.obj_dict["HDM_04_10_glass"].draw();
             for (var key in this.obj_dict){
-                if (key!="HDM_04_10_glass")
                 this.obj_dict[key].draw();
             }
         } else {
@@ -92,9 +90,7 @@ Trenchant.Object3D.prototype = {
 	},
 	drawShadow: function() {
 		if (this.drawSequence==undefined){
-            this.obj_dict["HDM_04_10_glass"].draw();
             for (var key in this.obj_dict){
-                if (key!="HDM_04_10_glass")
                 this.obj_dict[key].drawShadow();
             }
         } else {
