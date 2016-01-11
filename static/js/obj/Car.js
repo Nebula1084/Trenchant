@@ -84,7 +84,7 @@ Trenchant.Car = function(){
     this.wheel_fr = new Trenchant.Animate();
     
 
-    var lightingLocation = new Trenchant.Vector3(90, 90.0, 200.0);
+    var lightingLocation = new Trenchant.Vector3(-90, -90.0, 200.0);
 
     
     this.M1 = new Trenchant.Material();
@@ -333,7 +333,7 @@ Trenchant.Car = function(){
 
     var scope = this;
         
-    loader.load("obj/car3.obj", function(objects){
+    loader.load("obj/car.obj", function(objects){
         scope.object3d=new Trenchant.Object3D(objects);        
         scope.object3d.drawSequence=scope.drawSequence;
         
@@ -386,7 +386,7 @@ Trenchant.Car = function(){
        scope.object3d.obj_dict["HDM_04_10_carpaint"].shaderProgram = scope.WardMesh;
        scope.object3d.obj_dict["HDM_04_10_carpaint"].material = scope.carpaint;
        
-       scope.object3d.obj_dict["HDM_04_10_glass"].material = scope.M0;
+     //  scope.object3d.obj_dict["HDM_04_10_glass"].material = scope.M0;
       
        
         scope.object3d.obj_dict["HDM_04_10_mirrors"].material = scope.glass2;

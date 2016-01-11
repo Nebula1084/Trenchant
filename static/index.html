@@ -31,7 +31,7 @@
         var scene;
         var canvas;
         
-        Trenchant.eyePos = [0.0, 0.0, 100.0];
+        Trenchant.eyePos = [24, 2.4, 170.0];
         Trenchant.eyeLookat = [0.0, 0.0, -1000.0];
         Trenchant.viewMatrix = mat4.create();
         
@@ -408,7 +408,7 @@
     
     <body onload="webGLStart();">
         
-        <canvas id="trenchant_canvas" style="border: none;" width="1400" height="700"></canvas>
+        <canvas id="trenchant_canvas" style="border: none;" width="1200" height="600"></canvas>
         <input type="text" id="show_speed"> speed</br>
         <input type="text" id="show_steer"> steering </br>
         <input type="text" id="car_height"> car height </br>
